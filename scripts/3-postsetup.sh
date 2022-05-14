@@ -29,10 +29,7 @@ grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
 grub-mkconfig -o /boot/grub/grub.cfg
 cp /boot/efi/EFI/GRUB/grubx64.efi /boot/efi/EFI/GRUB/grubx64.efi.bak
 git clone https://github.com/ccontavalli/grub-shusher.git ~/grub-shusher
-cd ~/grub-shusher/
-make
-./grub-kernel /boot/efi/EFI/GRUB/grubx64.efi
-cd ~
+cd ~/grub-shusher/ && make && ./grub-kernel /boot/efi/EFI/GRUB/grubx64.efi && cd ~
 rm -rf grub-shusher/
 
 echo "-------------------------------------------------"
