@@ -31,7 +31,7 @@ echo "-------------------------------------------------"
 echo "Setup root user bash                             "
 echo "-------------------------------------------------"
 echo "[[ -f ~/.bashrc ]] && . ~/.bashrc" >>${HOME}/.bash_profile
-cp /arch-base/.bashrc ${HOME}/
+cp ${SCRIPT_DIR}/.bashrc ${HOME}/
 touch ${HOME}/.bash_history
 source ${HOME}/.bashrc
 
@@ -140,7 +140,7 @@ sed -i 's/^# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
 echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" >>"/etc/sudoers.d/${USERNAME}"
 echo "permit persist :wheel" >>/etc/doas.conf
 echo "permit persist :${USERNAME}" >>/etc/doas.conf
-echo "USERNAME=${USERNAME}" >>/arch-base/.env
+echo "USERNAME=${USERNAME}" >>${SCRIPT_DIR}/.env
 export USERNAME
 
 echo "-------------------------------------------------"
@@ -164,5 +164,5 @@ sed -i "s/TIMELINE_LIMIT_HOURLY=\"10\"/TIMELINE_LIMIT_HOURLY=\"5\"/g" /etc/snapp
 echo "-------------------------------------------------"
 echo "Copying arch-base repo to user directory         "
 echo "-------------------------------------------------"
-cp -r /arch-base/ /home/${USERNAME}/
-chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/arch-base/
+cp -r ${SCRIPT_DIR} /home/${USERNAME}/
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/${SCRIPT_DIR}/
