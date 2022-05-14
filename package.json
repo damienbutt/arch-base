@@ -1,0 +1,45 @@
+{
+    "name": "arch-base",
+    "version": "0.0.0-development",
+    "description": "A collection of various project boilerplates",
+    "keywords": [
+        "archlinux",
+        "linux",
+        "arch",
+        "script",
+        "install"
+    ],
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/damienbutt/arch-base.git"
+    },
+    "bugs": {
+        "url": "https://github.com/damienbutt/arch-base/issues"
+    },
+    "engines": {
+        "node": ">=14"
+    },
+    "scripts": {
+        "commit": "git-cz",
+        "prepare": "husky install",
+        "doctoc": "doctoc --title '## Contents 📖' README.md",
+        "contrib:add": "all-contributors add",
+        "contrib:generate": "all-contributors generate",
+        "contrib:check": "all-contributors check"
+    },
+    "devDependencies": {
+        "@commitlint/cli": "^16.2.3",
+        "@commitlint/config-conventional": "^16.2.1",
+        "@semantic-release/changelog": "^6.0.1",
+        "@semantic-release/git": "^10.0.1",
+        "all-contributors-cli": "^6.20.0",
+        "cz-conventional-changelog": "3.3.0",
+        "doctoc": "^2.2.0",
+        "husky": "^8.0.1",
+        "lint-staged": "^12.4.1",
+        "prettier": "^2.6.2",
+        "semantic-release": "^19.0.2"
+    },
+    "dependencies": {}
+}
