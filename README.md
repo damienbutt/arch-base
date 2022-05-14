@@ -43,7 +43,7 @@ A collection of bash scripts to get Arch Linux up and running with ease.
 3. Install Git  
    `pacman -S git --noconfirm`
 4. Clone the git repository  
-   `git clone https://github.com/fsociety3765/arch-base`
+   `git clone https://github.com/damienbutt/arch-base`
 5. Move into the git repo and make all scripts executable  
    `cd arch-base/ && chmod +x *.sh`
 6. Run the `base.sh` script.  
