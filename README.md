@@ -22,9 +22,11 @@ A collection of bash scripts to get Arch Linux up and running with ease.
 
 ## Contents 📖
 
+-   [Features :package:](#features-package)
 -   [Usage :rocket:](#usage-rocket)
 -   [Team :soccer:](#team-soccer)
 -   [Contributors :sparkles:](#contributors-sparkles)
+-   [Learn More :books:](#learn-more-books)
 -   [LICENSE :balance_scale:](#license-balance_scale)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
