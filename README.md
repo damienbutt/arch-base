@@ -35,20 +35,24 @@ A collection of bash scripts to get Arch Linux up and running with ease.
 -   2GB RAM. 1GB will be reserved for ZRAM swap.
 -   10GB HDD. 2GB will be reserved for swap. -->
 
+## Features :package:
+
+-   EFI
+-   BTRFS
+-   LUKS Encryption
+-   ZRAM
+-   Swapfile
+
 ## Usage :rocket:
 
-1. Boot to live ISO
-2. Refresh mirrors  
-   `pacman -Syy`
-3. Install Git  
-   `pacman -S git --noconfirm`
-4. Clone the git repository  
-   `git clone https://github.com/damienbutt/arch-base`
-5. Move into the git repo and make all scripts executable  
-   `cd arch-base/ && chmod +x *.sh`
-6. Run the `base.sh` script.  
-   `bash base.sh`
-7. Follow prompts until the setup is complete.
+1. Download the latest version of the live ISO from [here](https://www.archlinux.org/download/) and boot into it.
+2. Run the following command:
+
+    ```bash
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/master/install.sh)"
+    ```
+
+3. Follow prompts until the setup is complete.
 
 ## Team :soccer:
 
@@ -90,6 +94,10 @@ This project follows the [all-contributors](https://allcontributors.org) specifi
 Contributions of any kind are welcome!
 
 Check out the [contributing guide](CONTRIBUTING.md) for more information.
+
+## Learn More :books:
+
+To learn more about Arch Linux, make sure to check out the [ArchWiki](https://wiki.archlinux.org/index.php/Main_Page).
 
 ## LICENSE :balance_scale:
 
