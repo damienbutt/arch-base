@@ -16,12 +16,18 @@ reflector -a 48 -c ${ISO} -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
 
 print_header "Select your disk to format"
 lsblk
+
+echo
 read -p "Please enter disk to work on: (example /dev/sda): " DISK
+
+echo
 echo "THIS WILL FORMAT AND DELETE ALL DATA ON THE DISK"
+
+echo
 read -p "Are you sure you want to continue (Y/N):" FORMAT
 case ${FORMAT} in
 y | Y | yes | Yes | YES)
-    print_header "\nFormatting disk...\n$HR"
+    print_header "Formatting disk..."
     sgdisk -Z ${DISK}
     sgdisk -a 2048 -o ${DISK}
     sgdisk -n 1::+260M --typecode=1:ef00 ${DISK}
