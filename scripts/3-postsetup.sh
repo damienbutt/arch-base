@@ -1,6 +1,7 @@
 #!/bin/bash
 
-source ${SCRIPT_DIR}/.env
+source /.env
+source /env.sh
 
 echo "-------------------------------------------------"
 echo "Configuring initramfs                            "
@@ -21,8 +22,7 @@ efibootmgr --create --disk ${EFI_PARTITION} --part 1 --loader /EFI/arch_netboot/
 echo "-------------------------------------------------"
 echo "Configuring Grub                                 "
 echo "-------------------------------------------------"
-export ROOT_PARTITION_UUID=$(blkid -o value -s UUID ${ROOT_PARTITION})
-echo "ROOT_PARTITION_UUID=${ROOT_PARTITION_UUID}" >>${SCRIPT_DIR}/.env
+save ROOT_PARTITION_UUID "$(blkid -o value -s UUID ${ROOT_PARTITION})"
 sed -i "s|quiet|cryptdevice=UUID=${ROOT_PARTITION_UUID}:${CRYPTROOT_NAME} root=${CRYPTROOT_PATH} lsm=landlock,lockdown,yama,apparmor,bpf audit=1|g" /etc/default/grub
 sed -i 's/^#GRUB_ENABLE_CRYPTODISK/GRUB_ENABLE_CRYPTODISK/' /etc/default/grub
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
@@ -69,8 +69,8 @@ systemctl enable auditd
 echo "-------------------------------------------------"
 echo "Copying arch-base repo to user directory         "
 echo "-------------------------------------------------"
-cp -r ${SCRIPT_DIR} /home/${USERNAME}/
-chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/${SCRIPT_DIR}/
+cp -r ${REPO_DIR} /home/${USERNAME}/
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/${REPO_NAME}/
 
 echo "-------------------------------------------------"
 echo "Resetting user (${USERNAME}) sudo permissions    "

@@ -1,18 +1,21 @@
 #!/bin/bash
 
-export SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-export REPO_DIR="$(dirname ${SCRIPT_DIR})"
-export REPO_NAME=$(awk -F/ '{print $NF}' <<<${REPO_DIR})
-echo "SCRIPT_DIR=${SCRIPT_DIR}" >>${REPO_DIR}/.env
-echo "REPO_DIR=${REPO_DIR}" >>${REPO_DIR}/.env
-echo "REPO_NAME=${REPO_NAME}" >>${REPO_DIR}/.env
+source ./env.sh
 
-bash ${SCRIPT_DIR}/0-preinstall.sh
-# arch-chroot /mnt /${REPO_NAME}/1-setup.sh
-# source /mnt/${REPO_NAME}/.env
-# arch-chroot /mnt /usr/bin/runuser -u ${USERNAME} -- /home/${USERNAME}/${REPO_NAME}/2-user.sh
-# arch-chroot /mnt /${REPO_NAME}/3-post-setup.sh
-# arch-chroot /mnt /bin/bash -c "rm -rf /${REPO_NAME}/"
+save SCRIPT_DIR ${GET_SCRIPT_DIR}
+save REPO_DIR ${GET_REPO_DIR}
+save REPO_NAME ${GET_REPO_NAME}
+
+bash 0-preinstall.sh
+arch-chroot /mnt /${REPO_NAME}/scripts/1-setup.sh
+
+source /mnt/${REPO_NAME}/scripts/.env
+arch-chroot /mnt /usr/bin/runuser -u ${USERNAME} -- /home/${USERNAME}/${REPO_NAME}/scripts/2-user.sh
+
+arch-chroot /mnt /${REPO_NAME}/scripts/3-post-setup.sh
+arch-chroot /mnt /bin/bash -c "rm -rf /${REPO_NAME}/"
+
+cleanup
 
 echo "-------------------------------------------------"
 echo "Complete                                         "

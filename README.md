@@ -48,13 +48,17 @@ A collection of bash scripts to get Arch Linux up and running with ease.
 ## Usage :rocket:
 
 1. Download the latest version of the live ISO from [here](https://www.archlinux.org/download/) and boot into it.
-2. Run the following command:
+2. Confirm internet connectivity.
+    - If you are using
+3. (Optional) Set the root user password to allow SSH access. This is not required but recommended to allow copy/paste functionality.
+    1. Get the IP address of the
+4. Run the following command:
 
     ```bash
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/master/install.sh)"
     ```
 
-3. Follow prompts until the setup is complete.
+5. Follow prompts until the setup is complete.
 
 ## Team :soccer:
 
