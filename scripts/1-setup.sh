@@ -1,12 +1,13 @@
 #!/bin/bash
 
-echo "-------------------------------------------------"
-echo "Starting setup                                   "
-echo "-------------------------------------------------"
+source .env
+source env.sh
 
-echo "-------------------------------------------------"
-echo "Setting up locales                               "
-echo "-------------------------------------------------"
+print_header "Starting setup"
+update_var SCRIPT_DIR ${GET_SCRIPT_DIR}
+update_var REPO_DIR ${GET_REPO_DIR}
+
+print_header "Setting up locales"
 ln -sf /usr/share/zoneinfo/Europe/London /etc/localtime
 hwclock --systohc
 sed -i '160s/.//' /etc/locale.gen
@@ -14,30 +15,22 @@ locale-gen
 echo "LANG=en_GB.UTF-8" >>/etc/locale.conf
 echo "KEYMAP=uk" >>/etc/vconsole.conf
 
-echo "-------------------------------------------------"
-echo "Configuring hostname and hosts file              "
-echo "-------------------------------------------------"
+print_header "Configuring hostname and hosts file"
 echo "arch" >>/etc/hostname
 echo "127.0.0.1 localhost" >>/etc/hosts
 echo "::1       localhost" >>/etc/hosts
 echo "127.0.1.1 arch" >>/etc/hosts
 
-echo "-------------------------------------------------"
-echo "Set root password                                "
-echo "-------------------------------------------------"
+print_header "Set root password"
 passwd root
 
-echo "-------------------------------------------------"
-echo "Setup root user bash                             "
-echo "-------------------------------------------------"
+print_header "Setup root user bash"
 echo "[[ -f ~/.bashrc ]] && . ~/.bashrc" >>${HOME}/.bash_profile
 cp ${SCRIPT_DIR}/.bashrc ${HOME}/
 touch ${HOME}/.bash_history
 source ${HOME}/.bashrc
 
-echo "-------------------------------------------------"
-echo "Installing system packages                       "
-echo "-------------------------------------------------"
+print_header "Installing system packages"
 sed -i 's/^#Para/Para/' /etc/pacman.conf
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 pacman -Sy --noconfirm
@@ -116,12 +109,9 @@ AuthenticAMD)
     ;;
 esac
 
-echo "-------------------------------------------------"
-echo "Setup MAKEPKG config                             "
-echo "-------------------------------------------------"
+print_header "Setup MAKEPKG config"
 CPU_CORES=$(grep -c ^processor /proc/cpuinfo)
 echo "You have ${CPU_CORES} cores."
-echo "-------------------------------------------------"
 echo "Changing the makeflags for "${CPU_CORES}" cores."
 if [[ ${CPU_CORES} -gt 2 ]]; then
     sed -i "s/#MAKEFLAGS=\"-j2\"/MAKEFLAGS=\"-j${CPU_CORES}\"/g" /etc/makepkg.conf
@@ -129,9 +119,7 @@ if [[ ${CPU_CORES} -gt 2 ]]; then
     sed -i "s/COMPRESSXZ=(xz -c -z -)/COMPRESSXZ=(xz -c -T ${CPU_CORES} -z -)/g" /etc/makepkg.conf
 fi
 
-echo "-------------------------------------------------"
-echo "Create non-root user                             "
-echo "-------------------------------------------------"
+print_header "Create non-root user"
 read -p "Username: " USERNAME
 useradd -m ${USERNAME}
 passwd ${USERNAME}
@@ -140,12 +128,9 @@ sed -i 's/^# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
 echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" >>"/etc/sudoers.d/${USERNAME}"
 echo "permit persist :wheel" >>/etc/doas.conf
 echo "permit persist :${USERNAME}" >>/etc/doas.conf
-echo "USERNAME=${USERNAME}" >>${SCRIPT_DIR}/.env
-export USERNAME
+save_var USERNAME ${USERNAME}
 
-echo "-------------------------------------------------"
-echo "Setup Snapper snapshots                          "
-echo "-------------------------------------------------"
+print_header "Setup Snapper snapshots"
 umount /.snapshots
 rm -r /.snapshots
 snapper --no-dbus -c root create-config /
@@ -161,8 +146,8 @@ sed -i "s/TIMELINE_LIMIT_MONTHLY=\"10\"/TIMELINE_LIMIT_MONTHLY=\"0\"/g" /etc/sna
 sed -i "s/TIMELINE_LIMIT_DAILY=\"10\"/TIMELINE_LIMIT_DAILY=\"7\"/g" /etc/snapper/configs/root
 sed -i "s/TIMELINE_LIMIT_HOURLY=\"10\"/TIMELINE_LIMIT_HOURLY=\"5\"/g" /etc/snapper/configs/root
 
-echo "-------------------------------------------------"
-echo "Copying arch-base repo to user directory         "
-echo "-------------------------------------------------"
-cp -r ${SCRIPT_DIR} /home/${USERNAME}/
-chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/${SCRIPT_DIR}/
+print_header "Copying arch-base repo to user directory"
+cp -r ${REPO_DIR} /home/${USERNAME}/
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/${REPO_NAME}/
+
+print_header "Setup complete"

@@ -1,33 +1,33 @@
 #!/bin/bash
 
-echo "-------------------------------------------------"
-echo "Starting Pre-install                             "
-echo "-------------------------------------------------"
-export SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-export ISO=$(curl -4 ifconfig.co/country-iso)
-echo "SCRIPT_DIR=${SCRIPT_DIR}" >>${SCRIPT_DIR}/.env
-echo "ISO=${ISO}" >>${SCRIPT_DIR}/.env
+source .env
+source env.sh
+
+print_header "Starting Pre-install"
+save_var ISO "$(curl -4 ifconfig.co/country-iso)"
 timedatectl set-ntp true
 
-echo -e "-----------------------------------------------"
-echo -e "Setting up ${ISO} mirrors for faster downloads   "
-echo -e "-----------------------------------------------"
+print_header "Setting up ${ISO} mirrors for faster downloads"
 sed -i 's/^#Para/Para/' /etc/pacman.conf
-mv /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+if [[ -f /etc/pacman.d/mirrorlist ]]; then
+    mv /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+fi
 reflector -a 48 -c ${ISO} -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
 
-echo "-------------------------------------------------"
-echo "-------select your disk to format----------------"
-echo "-------------------------------------------------"
+print_header "Select your disk to format"
 lsblk
+
+echo
 read -p "Please enter disk to work on: (example /dev/sda): " DISK
+
+echo
 echo "THIS WILL FORMAT AND DELETE ALL DATA ON THE DISK"
+
+echo
 read -p "Are you sure you want to continue (Y/N):" FORMAT
 case ${FORMAT} in
 y | Y | yes | Yes | YES)
-    echo "-------------------------------------------------"
-    echo -e "\nFormatting disk...\n$HR"
-    echo "-------------------------------------------------"
+    print_header "Formatting disk..."
     sgdisk -Z ${DISK}
     sgdisk -a 2048 -o ${DISK}
     sgdisk -n 1::+260M --typecode=1:ef00 ${DISK}
@@ -41,29 +41,18 @@ y | Y | yes | Yes | YES)
         ROOT_PARTITION="${DISK}2"
     fi
 
-    export EFI_PARTITION
-    export ROOT_PARTITION
-    echo "EFI_PARTITION=${EFI_PARTITION}" >>${SCRIPT_DIR}/.env
-    echo "ROOT_PARTITION=${ROOT_PARTITION}" >>${SCRIPT_DIR}/.env
+    save_var EFI_PARTITION ${EFI_PARTITION}
+    save_var ROOT_PARTITION ${ROOT_PARTITION}
 
-    echo "-------------------------------------------------"
-    echo "Setting up LUKS encryption                       "
-    echo "-------------------------------------------------"
+    print_header "Setting up LUKS encryption"
     cryptsetup -y -v --type luks1 luksFormat ${ROOT_PARTITION}
 
-    echo "-------------------------------------------------"
-    echo "Opening LUKS volume                              "
-    echo "-------------------------------------------------"
-    export CRYPTROOT_NAME="cryptroot"
-    export CRYPTROOT_PATH="/dev/mapper/${CRYPTROOT_NAME}"
+    print_header "Opening LUKS volume"
+    save_var CRYPTROOT_NAME "cryptroot"
+    save_var CRYPTROOT_PATH "/dev/mapper/${CRYPTROOT_NAME}"
     cryptsetup open ${ROOT_PARTITION} ${CRYPTROOT_NAME}
 
-    echo "CRYPTROOT_NAME=${CRYPTROOT_NAME}" >>${SCRIPT_DIR}/.env
-    echo "CRYPTROOT_PATH=${CRYPTROOT_PATH}" >>${SCRIPT_DIR}/.env
-
-    echo "-------------------------------------------------"
-    echo "Creating filesystem                              "
-    echo "-------------------------------------------------"
+    print_header "Creating filesystem"
     mkfs.fat -F32 ${EFI_PARTITION}
     mkfs.btrfs ${CRYPTROOT_PATH}
     mount ${CRYPTROOT_PATH} /mnt
@@ -77,9 +66,7 @@ y | Y | yes | Yes | YES)
     ;;
 esac
 
-echo "-------------------------------------------------"
-echo "Setting up mount points                          "
-echo "-------------------------------------------------"
+print_header "Setting up mount points"
 mount -o noatime,compress=zstd,space_cache,discard=async,subvol=@ ${CRYPTROOT_PATH} /mnt
 mkdir -p /mnt/boot/efi
 mkdir -p /mnt/{home,swap,.snapshots}
@@ -92,29 +79,17 @@ mount -o noatime,compress=zstd,space_cache,discard=async,subvol=@snapshots ${CRY
 mount ${EFI_PARTITION} /mnt/boot/efi
 
 if ! grep -qs '/mnt' /proc/mounts; then
-    echo "-------------------------------------------------"
-    echo "!!! ERROR setting up mount points !!!            "
-    echo "!!! Cannot continue with installation !!!        "
-    echo "-------------------------------------------------"
-    echo "Rebooting in 3 Seconds ..." && sleep 1
-    echo "Rebooting in 2 Seconds ..." && sleep 1
-    echo "Rebooting in 1 Second ..." && sleep 1
-    reboot now
+    print_header "!!! ERROR setting up mount points !!!" "!!! Cannot continue with installation !!!"
+    reboot_after_delay 10
 fi
 
-echo "-------------------------------------------------"
-echo "Installing base packages                         "
-echo "-------------------------------------------------"
+print_header "Installing base packages"
 pacstrap /mnt base linux linux-firmware btrfs-progs git vim --noconfirm --needed
 
-echo "-------------------------------------------------"
-echo "Generating fstab file                            "
-echo "-------------------------------------------------"
+print_header "Generating fstab file"
 genfstab -U /mnt >>/mnt/etc/fstab
 
-echo "-------------------------------------------------"
-echo "Setting up swapfile                              "
-echo "-------------------------------------------------"
+print_header "Setting up swapfile"
 TOTAL_MEM=$(awk '/MemTotal/ {printf( "%d\n", $2 / 1024 )}' /proc/meminfo)
 SWAPFILE_SIZE=$((${TOTAL_MEM} + 2048))
 truncate -s 0 /mnt/swap/swapfile
@@ -126,25 +101,16 @@ mkswap /mnt/swap/swapfile
 swapon /mnt/swap/swapfile
 echo "/swap/swapfile none swap defaults 0 0" >>/mnt/etc/fstab
 
-echo "-------------------------------------------------"
-echo "Setting up LUKS keyfile                          "
-echo "-------------------------------------------------"
+print_header "Setting up LUKS keyfile"
 dd bs=512 count=4 if=/dev/random of=/mnt/crypto_keyfile.bin iflag=fullblock
 chmod 600 /mnt/crypto_keyfile.bin
 chmod 600 /mnt/boot/initramfs-linux*
 
-echo "-------------------------------------------------"
-echo "Adding the LUKS keyfile                          "
-echo "Enter your disk encryption password when prompted"
-echo "-------------------------------------------------"
+print_header "Adding the LUKS keyfile" "Enter your disk encryption password when prompted"
 cryptsetup luksAddKey ${ROOT_PARTITION} /mnt/crypto_keyfile.bin
 
-echo "-------------------------------------------------"
-echo "Copying Arch-Base scripts to installation        "
-echo "-------------------------------------------------"
-cp -R ${SCRIPT_DIR} /mnt/
+print_header "Copying Arch-Base scripts to installation"
+cp -R ${REPO_DIR} /mnt/
 cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 
-echo "-------------------------------------------------"
-echo "Pre-install Complete                             "
-echo "-------------------------------------------------"
+print_header "Pre-install complete"

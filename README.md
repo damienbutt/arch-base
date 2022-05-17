@@ -48,13 +48,46 @@ A collection of bash scripts to get Arch Linux up and running with ease.
 ## Usage :rocket:
 
 1. Download the latest version of the live ISO from [here](https://www.archlinux.org/download/) and boot into it.
-2. Run the following command:
+
+    - If you're installing on bare metal, you'll need to burn the ISO to a USB flash drive. A great tool for this is [Etcher](https://etcher.io/). It is free and open source software.
+
+2. (Optional) Setup WiFi.
+
+    - If you need to connect to WiFi for network connectivity, follow the instructions [here](https://wiki.archlinux.org/title/Iwd#iwctl).
+
+3. Confirm internet connectivity.
+
+    ```bash
+    ping -c 4 archlinux.org
+    ```
+
+4. (Optional) Set the root user password to allow SSH access. This is not required but recommended to allow copy/paste functionality.
+
+    1. Get the IP address of the machine.
+
+        ```bash
+        ip a
+        ```
+
+    2. Set the root user password.
+
+        ```bash
+        passwd root
+        ```
+
+    3. From a remote machine SSH into the environment.
+
+        ```bash
+        ssh root@<ip>
+        ```
+
+5. Run the following command:
 
     ```bash
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/master/install.sh)"
     ```
 
-3. Follow prompts until the setup is complete.
+6. Follow prompts until the setup is complete.
 
 ## Team :soccer:
 
