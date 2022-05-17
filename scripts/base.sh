@@ -2,9 +2,9 @@
 
 source env.sh
 
-save SCRIPT_DIR ${GET_SCRIPT_DIR}
-save REPO_DIR ${GET_REPO_DIR}
-save REPO_NAME ${GET_REPO_NAME}
+save_var SCRIPT_DIR ${GET_SCRIPT_DIR}
+save_var REPO_DIR ${GET_REPO_DIR}
+save_var REPO_NAME ${GET_REPO_NAME}
 
 bash 0-preinstall.sh
 arch-chroot /mnt /${REPO_NAME}/scripts/1-setup.sh

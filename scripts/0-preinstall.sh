@@ -4,7 +4,7 @@ source .env
 source env.sh
 
 print_header "Starting Pre-install"
-save ISO "$(curl -4 ifconfig.co/country-iso)"
+save_var ISO "$(curl -4 ifconfig.co/country-iso)"
 timedatectl set-ntp true
 
 print_header "Setting up ${ISO} mirrors for faster downloads"
@@ -35,15 +35,15 @@ y | Y | yes | Yes | YES)
         ROOT_PARTITION="${DISK}2"
     fi
 
-    save EFI_PARTITION ${EFI_PARTITION}
-    save ROOT_PARTITION ${ROOT_PARTITION}
+    save_var EFI_PARTITION ${EFI_PARTITION}
+    save_var ROOT_PARTITION ${ROOT_PARTITION}
 
     print_header "Setting up LUKS encryption"
     cryptsetup -y -v --type luks1 luksFormat ${ROOT_PARTITION}
 
     print_header "Opening LUKS volume"
-    save CRYPTROOT_NAME "cryptroot"
-    save CRYPTROOT_PATH "/dev/mapper/${CRYPTROOT_NAME}"
+    save_var CRYPTROOT_NAME "cryptroot"
+    save_var CRYPTROOT_PATH "/dev/mapper/${CRYPTROOT_NAME}"
     cryptsetup open ${ROOT_PARTITION} ${CRYPTROOT_NAME}
 
     print_header "Creating filesystem"

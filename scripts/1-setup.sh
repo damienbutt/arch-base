@@ -4,8 +4,8 @@ source .env
 source env.sh
 
 print_header "Starting setup"
-update SCRIPT_DIR ${GET_SCRIPT_DIR}
-update REPO_DIR ${GET_REPO_DIR}
+update_var SCRIPT_DIR ${GET_SCRIPT_DIR}
+update_var REPO_DIR ${GET_REPO_DIR}
 
 print_header "Setting up locales"
 ln -sf /usr/share/zoneinfo/Europe/London /etc/localtime
@@ -128,7 +128,7 @@ sed -i 's/^# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
 echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" >>"/etc/sudoers.d/${USERNAME}"
 echo "permit persist :wheel" >>/etc/doas.conf
 echo "permit persist :${USERNAME}" >>/etc/doas.conf
-save USERNAME ${USERNAME}
+save_var USERNAME ${USERNAME}
 
 print_header "Setup Snapper snapshots"
 umount /.snapshots

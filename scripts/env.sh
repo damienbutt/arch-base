@@ -4,7 +4,7 @@ export GET_SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null &
 export GET_REPO_DIR="$(dirname ${GET_SCRIPT_DIR})"
 export GET_REPO_NAME="$(awk -F/ '{print $NF}' <<<${GET_REPO_DIR})"
 
-function save() {
+function save_var() {
     local key="${1}"
     local value="${2}"
 
@@ -12,7 +12,7 @@ function save() {
     export ${key}="${value}"
 }
 
-function update() {
+function update_var() {
     local key="${1}"
     local value="${2}"
 
