@@ -1,7 +1,7 @@
 #!/bin/bash
 
-source /.env
-source /env.sh
+source .env
+source env.sh
 
 print_header "Starting Pre-install"
 save ISO "$(curl -4 ifconfig.co/country-iso)"
@@ -9,7 +9,9 @@ timedatectl set-ntp true
 
 print_header "Setting up ${ISO} mirrors for faster downloads"
 sed -i 's/^#Para/Para/' /etc/pacman.conf
-mv /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+if [[ -f /etc/pacman.d/mirrorlist ]]; then
+    mv /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+fi
 reflector -a 48 -c ${ISO} -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
 
 print_header "Select your disk to format"

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ./env.sh
+source env.sh
 
 save SCRIPT_DIR ${GET_SCRIPT_DIR}
 save REPO_DIR ${GET_REPO_DIR}

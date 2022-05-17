@@ -1,7 +1,7 @@
 #!/bin/bash
 
-source /.env
-source /env.sh
+source .env
+source env.sh
 
 print_header "Starting Post-setup"
 
