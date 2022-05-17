@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export GET_SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 export GET_REPO_DIR="$(dirname ${GET_SCRIPT_DIR})"
 export GET_REPO_NAME="$(awk -F/ '{print $NF}' <<<${GET_REPO_DIR})"
@@ -19,7 +21,7 @@ function update() {
 }
 
 function print_header() {
-    local messages=(${@})
+    local messages=("${@}")
 
     echo
     echo "-------------------------------------------------"
