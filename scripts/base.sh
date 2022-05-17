@@ -17,19 +17,5 @@ arch-chroot /mnt /bin/bash -c "rm -rf /${REPO_NAME}/"
 
 cleanup
 
-echo "-------------------------------------------------"
-echo "Complete                                         "
-echo "Rebooting in 10 seconds...                       "
-echo "Press CTRL+C to cancel the reboot                "
-echo "-------------------------------------------------"
-echo "Rebooting in 10 Seconds ..." && sleep 1
-echo "Rebooting in 9 Seconds ..." && sleep 1
-echo "Rebooting in 8 Seconds ..." && sleep 1
-echo "Rebooting in 7 Seconds ..." && sleep 1
-echo "Rebooting in 6 Seconds ..." && sleep 1
-echo "Rebooting in 5 Seconds ..." && sleep 1
-echo "Rebooting in 4 Seconds ..." && sleep 1
-echo "Rebooting in 3 Seconds ..." && sleep 1
-echo "Rebooting in 2 Seconds ..." && sleep 1
-echo "Rebooting in 1 Second ..." && sleep 1
-reboot now
+print_header "Complete"
+reboot_after_delay 10

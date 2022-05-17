@@ -18,6 +18,31 @@ function update() {
     export ${key}="${value}"
 }
 
+function print_header() {
+    local messages=(${@})
+
+    echo
+    echo "-------------------------------------------------"
+    for message in "${messages[@]}"; do
+        echo "${message}"
+    done
+    echo "-------------------------------------------------"
+    echo
+}
+
+function reboot_after_delay() {
+    local delay="${1}"
+
+    print_header "Rebooting in ${delay} seconds..." "Press CTRL+C to cancel the reboot"
+    for i in {1..${delay}}; do
+        echo "Rebooting in ${delay} seconds ..."
+        sleep 1
+        delay=$((delay - 1))
+    done
+
+    reboot now
+}
+
 function cleanup() {
     unset SCRIPT_DIR
     unset REPO_DIR
