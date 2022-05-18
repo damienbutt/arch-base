@@ -69,15 +69,15 @@ y | Y | yes | Yes | YES)
 esac
 
 print_header "Setting up mount points"
-mount -o noatime,compress=zstd,space_cache,discard=async,subvol=@ ${CRYPTROOT_PATH} /mnt
+mount -o noatime,compress=zstd,space_cache=v2,ssd,discard=async,subvol=@ ${CRYPTROOT_PATH} /mnt
 mkdir -p /mnt/boot/efi
 mkdir -p /mnt/{home,swap,.snapshots}
 mkdir -p /mnt/var/{log,cache}
-mount -o noatime,compress=zstd,space_cache,discard=async,subvol=@home ${CRYPTROOT_PATH} /mnt/home
-mount -o noatime,compress=zstd,space_cache,discard=async,subvol=@log ${CRYPTROOT_PATH} /mnt/var/log
-mount -o noatime,compress=zstd,space_cache,discard=async,subvol=@cache ${CRYPTROOT_PATH} /mnt/var/cache
-mount -o noatime,compress=zstd,space_cache,discard=async,subvol=@swap ${CRYPTROOT_PATH} /mnt/swap
-mount -o noatime,compress=zstd,space_cache,discard=async,subvol=@snapshots ${CRYPTROOT_PATH} /mnt/.snapshots
+mount -o noatime,compress=zstd,space_cache=v2,ssd,discard=async,subvol=@home ${CRYPTROOT_PATH} /mnt/home
+mount -o noatime,compress=zstd,space_cache=v2,ssd,discard=async,subvol=@log ${CRYPTROOT_PATH} /mnt/var/log
+mount -o noatime,compress=zstd,space_cache=v2,ssd,discard=async,subvol=@cache ${CRYPTROOT_PATH} /mnt/var/cache
+mount -o noatime,compress=zstd,space_cache=v2,ssd,discard=async,subvol=@swap ${CRYPTROOT_PATH} /mnt/swap
+mount -o noatime,compress=zstd,space_cache=v2,ssd,discard=async,subvol=@snapshots ${CRYPTROOT_PATH} /mnt/.snapshots
 mount ${EFI_PARTITION} /mnt/boot/efi
 
 if ! mounts_success; then
