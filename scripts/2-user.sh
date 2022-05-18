@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source env.sh
+source ${REPO_DIR}/env.sh
 
 print_header "Starting user setup"
 
