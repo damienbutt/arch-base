@@ -68,3 +68,21 @@ function cleanup() {
     unset GET_REPO_DIR
     unset GET_REPO_NAME
 }
+
+function mounts_success() {
+    if ! [[ $(mount | grep "/mnt ") ]]; then
+        return 1
+    elif ! [[ $(mount | grep "/mnt/home ") ]]; then
+        return 1
+    elif ! [[ $(mount | grep "/mnt/var/log ") ]]; then
+        return 1
+    elif ! [[ $(mount | grep "/mnt/var/cache ") ]]; then
+        return 1
+    elif ! [[ $(mount | grep "/mnt/swap ") ]]; then
+        return 1
+    elif ! [[ $(mount | grep "/mnt/.snapshots ") ]]; then
+        return 1
+    else
+        return 0
+    fi
+}

@@ -34,15 +34,12 @@ y | Y | yes | Yes | YES)
     sgdisk -n 2::-0 --typecode=2:8300 ${DISK}
 
     if [[ ${DISK} =~ "nvme" ]]; then
-        EFI_PARTITION="${DISK}p1"
-        ROOT_PARTITION="${DISK}p2"
+        save_var EFI_PARTITION "${DISK}p1"
+        save_var ROOT_PARTITION "${DISK}p2"
     else
-        EFI_PARTITION="${DISK}1"
-        ROOT_PARTITION="${DISK}2"
+        save_var EFI_PARTITION "${DISK}1"
+        save_var ROOT_PARTITION "${DISK}2"
     fi
-
-    save_var EFI_PARTITION ${EFI_PARTITION}
-    save_var ROOT_PARTITION ${ROOT_PARTITION}
 
     print_header "Setting up LUKS encryption"
     cryptsetup -y -v --type luks1 luksFormat ${ROOT_PARTITION}
@@ -64,6 +61,11 @@ y | Y | yes | Yes | YES)
     btrfs subvolume create /mnt/@swap
     umount /mnt
     ;;
+*)
+    echo
+    echo "Aboring installation..."
+    exit 1
+    ;;
 esac
 
 print_header "Setting up mount points"
@@ -78,7 +80,7 @@ mount -o noatime,compress=zstd,space_cache,discard=async,subvol=@swap ${CRYPTROO
 mount -o noatime,compress=zstd,space_cache,discard=async,subvol=@snapshots ${CRYPTROOT_PATH} /mnt/.snapshots
 mount ${EFI_PARTITION} /mnt/boot/efi
 
-if ! grep -qs '/mnt' /proc/mounts; then
+if ! mounts_success; then
     print_header "!!! ERROR setting up mount points !!!" "!!! Cannot continue with installation !!!"
     reboot_after_delay 10
 fi
