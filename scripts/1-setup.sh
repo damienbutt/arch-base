@@ -1,7 +1,7 @@
 #!/bin/bash
 
-source .env
-source env.sh
+source ${SCRIPT_DIR}/.env
+source ${SCRIPT_DIR}/env.sh
 
 print_header "Starting setup"
 update_var SCRIPT_DIR ${GET_SCRIPT_DIR}
