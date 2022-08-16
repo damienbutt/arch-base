@@ -1,8 +1,10 @@
 #!/bin/bash
 
-source env.sh
+export SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-save_var SCRIPT_DIR ${GET_SCRIPT_DIR}
+source ${SCRIPT_DIR}/env.sh
+
+# save_var SCRIPT_DIR ${GET_SCRIPT_DIR}
 save_var REPO_DIR ${GET_REPO_DIR}
 save_var REPO_NAME ${GET_REPO_NAME}
 
