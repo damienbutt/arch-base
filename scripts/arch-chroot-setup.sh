@@ -31,7 +31,6 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 source ${SCRIPT_DIR}/install-arch-base-utils.sh
 source ${SCRIPT_DIR}/.env
 
-clear
 ohai "Setting up locales"
 ln -sf /usr/share/zoneinfo/Europe/London /etc/localtime
 hwclock --systohc
@@ -40,7 +39,6 @@ locale-gen >/dev/null
 echo "LANG=en_GB.UTF-8" >>/etc/locale.conf
 echo "KEYMAP=mac-uk" >>/etc/vconsole.conf
 
-echo
 ohai "Configuring hostname and hosts file"
 echo "arch" >>/etc/hostname
 echo "127.0.0.1 localhost" >>/etc/hosts
@@ -54,11 +52,8 @@ passwd root
 echo
 ohai "Setup root user bash"
 echo "[[ -f ~/.bashrc ]] && . ~/.bashrc" >>${HOME}/.bash_profile
-# cp ${SCRIPT_DIR}/.bashrc ${HOME}/
 touch ${HOME}/.bash_history
-# source ${HOME}/.bashrc
 
-clear
 ohai "Installing system packages"
 sed -i 's/^#Para/Para/' /etc/pacman.conf
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
