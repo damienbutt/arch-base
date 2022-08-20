@@ -158,7 +158,6 @@ ohai "Generating fstab"
 genfstab -U /mnt >>/mnt/etc/fstab
 
 # Setup swapfile
-echo
 ohai "Creating swapfile"
 TOTAL_MEM=$(awk '/MemTotal/ {printf( "%d\n", $2 / 1024 )}' /proc/meminfo)
 SWAPFILE_SIZE=$((${TOTAL_MEM} + 2048))
