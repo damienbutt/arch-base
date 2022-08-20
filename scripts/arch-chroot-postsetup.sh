@@ -65,21 +65,27 @@ ohai "Enabling apparmor write cache"
 sed -i 's/^#write-cache/write-cache/' /etc/apparmor/parser.conf
 
 ohai "Enabling services to start at boot"
-systemctl enable NetworkManager
-systemctl enable sshd
-systemctl enable avahi-daemon
-systemctl enable reflector.timer
-systemctl enable fstrim.timer
-systemctl enable firewalld
-systemctl enable acpid
-systemctl enable cronie
-systemctl enable zramd
-systemctl enable snapper-timeline.timer
-systemctl enable snapper-cleanup.timer
-systemctl enable snapper-boot.timer
-systemctl enable grub-btrfs.path
-systemctl enable apparmor
-systemctl enable auditd
+SERVICES=(
+    NetworkManager
+    sshd
+    avahi-daemon
+    reflector.timer
+    fstrim.timer
+    firewalld
+    acpid
+    cronie
+    zramd
+    snapper-timeline.timer
+    snapper-cleanup.timer
+    snapper-boot.timer
+    grub-btrfs.path
+    apparmor
+    auditd
+)
+
+for SERVICE in "${SERVICES[@]}"; do
+    systemctl enable "${SERVICE}" >/dev/null
+done
 
 echo "${USERNAME} ALL=(ALL) ALL" >"/etc/sudoers.d/${USERNAME}"
 
