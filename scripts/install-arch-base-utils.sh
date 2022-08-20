@@ -1,8 +1,52 @@
 #!/bin/bash
 
+shell_join() {
+    local arg
+    printf "%s" "$1"
+    shift
+    for arg in "$@"; do
+        printf " "
+        printf "%s" "${arg// /\ }"
+    done
+}
+
+chomp() {
+    printf "%s" "${1/"$'\n'"/}"
+}
+
+ohai() {
+    printf "${tty_blue}==>${tty_bold} %s${tty_reset}\n" "$(shell_join "$@")"
+}
+
+warn() {
+    printf "${tty_red}Warning${tty_reset}: %s\n" "$(chomp "$1")"
+}
+
+# Search for the given executable in PATH (avoids a dependency on the `which` command)
+which() {
+    # Alias to Bash built-in command `type -P`
+    type -P "$@"
+}
+
+# Search PATH for the specified program that satisfies Homebrew requirements
+# function which is set above
+find_tool() {
+    if [[ $# -ne 1 ]]; then
+        return 1
+    fi
+
+    local executable
+    while read -r executable; do
+        if "test_$1" "${executable}"; then
+            echo "${executable}"
+            break
+        fi
+    done < <(which -a "$1")
+}
+
 # export GET_SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-export GET_REPO_DIR="$(dirname ${GET_SCRIPT_DIR})"
-export GET_REPO_NAME="$(awk -F/ '{print $NF}' <<<${GET_REPO_DIR})"
+# export GET_REPO_DIR="$(dirname ${GET_SCRIPT_DIR})"
+# export GET_REPO_NAME="$(awk -F/ '{print $NF}' <<<${GET_REPO_DIR})"
 
 function save_var() {
     local key="${1}"
@@ -47,8 +91,8 @@ function reboot_after_delay() {
 
 function cleanup() {
     unset SCRIPT_DIR
-    unset REPO_DIR
-    unset REPO_NAME
+    # unset REPO_DIR
+    # unset REPO_NAME
     unset ISO
     unset DISK
     unset EFI_PARTITION
@@ -64,9 +108,9 @@ function cleanup() {
     unset PKGS
     unset PKG
     unset ROOT_PARTITION_UUID
-    unset GET_SCRIPT_DIR
-    unset GET_REPO_DIR
-    unset GET_REPO_NAME
+    # unset GET_SCRIPT_DIR
+    # unset GET_REPO_DIR
+    # unset GET_REPO_NAME
 }
 
 function mounts_success() {
