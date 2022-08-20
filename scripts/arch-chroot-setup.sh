@@ -37,7 +37,7 @@ hwclock --systohc
 sed -i '160s/.//' /etc/locale.gen
 locale-gen >/dev/null
 echo "LANG=en_GB.UTF-8" >>/etc/locale.conf
-echo "KEYMAP=mac-uk" >>/etc/vconsole.conf
+echo "KEYMAP=uk" >>/etc/vconsole.conf
 
 ohai "Configuring hostname and hosts file"
 echo "arch" >>/etc/hostname
