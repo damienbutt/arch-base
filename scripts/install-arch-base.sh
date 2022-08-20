@@ -44,11 +44,13 @@ EOABORT
 fi
 
 # Download dependencies
-curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/install-arch-base-utils.sh >install-arch-base-utils.sh
-curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/.bashrc >.bashrc
 curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/arch-chroot-setup.sh >arch-chroot-setup.sh
 curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/arch-chroot-user.sh >arch-chroot-user.sh
 curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/arch-chroot-postsetup.sh >arch-chroot-postsetup.sh
+chmod +x *.sh
+
+curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/install-arch-base-utils.sh >install-arch-base-utils.sh
+curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/.bashrc >.bashrc
 source install-arch-base-utils.sh
 
 # Start the actual installation
