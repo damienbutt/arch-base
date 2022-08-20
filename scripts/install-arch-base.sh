@@ -44,8 +44,8 @@ EOABORT
 fi
 
 # Download dependencies
-curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/install-arch-base-utils.sh | source
-curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/.bashrc
+curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/install-arch-base-utils.sh >install-arch-base-utils.sh | source
+curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/.bashrc >.bashrc
 
 # Start the actual installation
 ohai "Starting Arch-Base installation"
