@@ -108,22 +108,22 @@ for PKG in "${PKGS[@]}"; do
     pacman -S "$PKG" --noconfirm --needed
 done
 
-CPU_TYPE=$(lscpu | awk '/Vendor ID:/ {print $3}')
+save_var CPU_TYPE "$(lscpu | awk '^/Vendor ID:/ {print $3}')"
 case ${CPU_TYPE} in
 GenuineIntel)
     ohai "Installing Intel microcode"
     pacman -S --noconfirm intel-ucode
-    CPU_UCODE=intel-ucode.img
+    save_var CPU_UCODE "intel-ucode.img"
     ;;
 AuthenticAMD)
     ohai "Installing AMD microcode"
     pacman -S --noconfirm amd-ucode
-    CPU_UCODE=amd-ucode.img
+    save_var CPU_UCODE "amd-ucode.img"
     ;;
 esac
 
 ohai "Setup MAKEPKG config"
-CPU_CORES=$(grep -c ^processor /proc/cpuinfo)
+save_var CPU_CORES "$(grep -c ^processor /proc/cpuinfo)"
 echo "You have ${CPU_CORES} cores."
 echo "Changing the makeflags for "${CPU_CORES}" cores."
 if [[ ${CPU_CORES} -gt 2 ]]; then
