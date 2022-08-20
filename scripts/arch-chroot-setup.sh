@@ -118,19 +118,19 @@ PKGS=(
 )
 
 for PKG in "${PKGS[@]}"; do
-    echo "Installing: ${PKG}"
+    ohai "Installing: ${PKG}"
     pacman -S "$PKG" --noconfirm --needed
 done
 
 CPU_TYPE=$(lscpu | awk '/Vendor ID:/ {print $3}')
 case ${CPU_TYPE} in
 GenuineIntel)
-    echo "Installing Intel microcode"
+    ohai "Installing Intel microcode"
     pacman -S --noconfirm intel-ucode
     CPU_UCODE=intel-ucode.img
     ;;
 AuthenticAMD)
-    echo "Installing AMD microcode"
+    ohai "Installing AMD microcode"
     pacman -S --noconfirm amd-ucode
     CPU_UCODE=amd-ucode.img
     ;;
@@ -146,6 +146,7 @@ if [[ ${CPU_CORES} -gt 2 ]]; then
     sed -i "s/COMPRESSXZ=(xz -c -z -)/COMPRESSXZ=(xz -c -T ${CPU_CORES} -z -)/g" /etc/makepkg.conf
 fi
 
+clear
 ohai "Create non-root user"
 read -p "Username: " USERNAME
 useradd -m ${USERNAME}
