@@ -38,11 +38,11 @@ sed -i 's/^FILES=()/FILES=(\/crypto_keyfile.bin)/' /etc/mkinitcpio.conf
 sed -i 's/block filesystems keyboard fsck/block encrypt filesystems keyboard/' /etc/mkinitcpio.conf
 mkinitcpio -p linux
 
-ohai "Setting up Arch Linux Netboot"
-wget https://archlinux.org/static/netboot/ipxe-arch.16e24bec1a7c.efi
-mkdir /boot/efi/EFI/arch_netboot
-mv ipxe*.*.efi /boot/efi/EFI/arch_netboot/arch_netboot.efi
-efibootmgr --create --disk ${EFI_PARTITION} --part 1 --loader /EFI/arch_netboot/arch_netboot.efi --label "Arch Linux Netboot" --verbose
+# ohai "Setting up Arch Linux Netboot"
+# wget https://archlinux.org/static/netboot/ipxe-arch.16e24bec1a7c.efi
+# mkdir /boot/efi/EFI/arch_netboot
+# mv ipxe*.*.efi /boot/efi/EFI/arch_netboot/arch_netboot.efi
+# efibootmgr --create --disk ${EFI_PARTITION} --part 1 --loader /EFI/arch_netboot/arch_netboot.efi --label "Arch Linux Netboot" --verbose
 
 ohai "Configuring Grub"
 save_var ROOT_PARTITION_UUID "$(blkid -o value -s UUID ${ROOT_PARTITION})"
