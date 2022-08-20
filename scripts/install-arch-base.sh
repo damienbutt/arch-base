@@ -202,7 +202,7 @@ arch-chroot /mnt $(
 
     ohai "Setup root user bash"
     echo "[[ -f ~/.bashrc ]] && . ~/.bashrc" >>${HOME}/.bash_profile
-    cp ${SCRIPT_DIR}/.bashrc ${HOME}/
+    # cp ${SCRIPT_DIR}/.bashrc ${HOME}/
     touch ${HOME}/.bash_history
     # source ${HOME}/.bashrc
 
