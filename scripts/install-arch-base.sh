@@ -152,6 +152,7 @@ genfstab -U /mnt >>/mnt/etc/fstab
 ohai "Creating swapfile"
 TOTAL_MEM=$(awk '/MemTotal/ {printf( "%d\n", $2 / 1024 )}' /proc/meminfo)
 SWAPFILE_SIZE=$((${TOTAL_MEM} + 2048))
+touch /mnt/swap/swapfile
 truncate -s 0 /mnt/swap/swapfile
 chattr +C /mnt/swap/swapfile
 btrfs property set /mnt/swap/swapfile compression none
