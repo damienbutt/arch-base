@@ -193,8 +193,8 @@ cp .bashrc /mnt/root/
 # Chroot
 arch-chroot /mnt $(
     SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-    source /install-arch-base-utils.sh
-    source /.env
+    source ${SCRIPT_DIR}/install-arch-base-utils.sh
+    source ${SCRIPT_DIR}/.env
 
     clear
     ohai "Setting up locales"
