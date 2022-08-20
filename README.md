@@ -49,11 +49,11 @@ A collection of bash scripts to get Arch Linux up and running with ease.
 
 1. Download the latest version of the live ISO from [here](https://www.archlinux.org/download/) and boot into it.
 
-    - If you're installing on bare metal, you'll need to burn the ISO to a USB flash drive. A great tool for this is [Etcher](https://etcher.io/). It is free and open source software.
+    -   If you're installing on bare metal, you'll need to burn the ISO to a USB flash drive. A great tool for this is [Etcher](https://etcher.io/). It is free and open source software.
 
 2. (Optional) Setup WiFi.
 
-    - If you need to connect to WiFi for network connectivity, follow the instructions [here](https://wiki.archlinux.org/title/Iwd#iwctl).
+    -   If you need to connect to WiFi for network connectivity, follow the instructions [here](https://wiki.archlinux.org/title/Iwd#iwctl).
 
 3. Confirm internet connectivity.
 
@@ -84,7 +84,7 @@ A collection of bash scripts to get Arch Linux up and running with ease.
 5. Run the following command:
 
     ```bash
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/master/install.sh)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/install-arch-base.sh)"
     ```
 
 6. Follow prompts until the setup is complete.
