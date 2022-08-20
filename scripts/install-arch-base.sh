@@ -171,8 +171,18 @@ chmod 600 /mnt/boot/initramfs-linux*
 ohai "Adding the LUKS keyfile" "Enter your disk encryption password when prompted"
 cryptsetup luksAddKey ${ROOT_PARTITION} /mnt/crypto_keyfile.bin
 
+ohai "Preparing for arch-chroot"
+cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
+cp install-arch-base-utils.sh /mnt/
+cp .env /mnt/
+cp .bashrc /mnt/root/
+
 # Chroot
 arch-chroot /mnt $(
+    SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+    source /install-arch-base-utils.sh
+    source /.env
+
     ohai "Setting up locales"
     ln -sf /usr/share/zoneinfo/Europe/London /etc/localtime
     hwclock --systohc
