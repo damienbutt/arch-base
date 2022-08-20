@@ -58,6 +58,8 @@ timedatectl set-ntp true
 
 # Setup mirrors
 save_var ISO "$(curl -4 ifconfig.co/country-iso)"
+
+echo
 ohai "Setting up ${ISO} mirrors for faster downloads"
 if [[ -f /etc/pacman.d/mirrorlist ]]; then
     mv /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
@@ -83,6 +85,7 @@ echo
 read -p "Are you sure you want to continue (y/N):" FORMAT
 case ${FORMAT} in
 y | Y | yes | Yes | YES)
+    echo
     ohai "Partitioning the disk"
     sgdisk -Z ${DISK}
     sgdisk -a 2048 -o ${DISK}
@@ -97,14 +100,17 @@ y | Y | yes | Yes | YES)
         save_var ROOT_PARTITION "${DISK}2"
     fi
 
+    clear
     ohai "Setting up LUKS encryption"
     cryptsetup -y -v --type luks1 luksFormat ${ROOT_PARTITION}
 
+    echo
     ohai "Opening LUKS volume"
     save_var CRYPTROOT_NAME "cryptroot"
     save_var CRYPTROOT_PATH "/dev/mapper/${CRYPTROOT_NAME}"
     cryptsetup open ${ROOT_PARTITION} ${CRYPTROOT_NAME}
 
+    clear
     ohai "Formatting the partitions"
     mkfs.fat -F32 ${EFI_PARTITION}
     mkfs.btrfs ${CRYPTROOT_PATH}
@@ -124,6 +130,7 @@ y | Y | yes | Yes | YES)
 esac
 
 # Mount the filesystems
+echo
 ohai "Mounting the filesystems"
 mount -o noatime,compress=zstd,space_cache=v2,ssd,discard=async,subvol=@ ${CRYPTROOT_PATH} /mnt
 mkdir -p /mnt/boot/efi
@@ -141,14 +148,17 @@ if ! mounts_success; then
 fi
 
 # Install essential packages
+clear
 ohai "Installing essential packages"
 pacstrap /mnt base linux linux-firmware btrfs-progs git vim --noconfirm --needed
 
 #Fstab
+echo
 ohai "Generating fstab"
 genfstab -U /mnt >>/mnt/etc/fstab
 
 # Setup swapfile
+echo
 ohai "Creating swapfile"
 TOTAL_MEM=$(awk '/MemTotal/ {printf( "%d\n", $2 / 1024 )}' /proc/meminfo)
 SWAPFILE_SIZE=$((${TOTAL_MEM} + 2048))
@@ -163,14 +173,17 @@ swapon /mnt/swap/swapfile
 echo "/swap/swapfile none swap defaults 0 0" >>/mnt/etc/fstab
 
 # Setup LUKS keyfile
+echo
 ohai "Setting up LUKS keyfile"
 dd bs=512 count=4 if=/dev/random of=/mnt/crypto_keyfile.bin iflag=fullblock
 chmod 600 /mnt/crypto_keyfile.bin
 chmod 600 /mnt/boot/initramfs-linux*
 
+echo
 ohai "Adding the LUKS keyfile" "Enter your disk encryption password when prompted"
 cryptsetup luksAddKey ${ROOT_PARTITION} /mnt/crypto_keyfile.bin
 
+echo
 ohai "Preparing for arch-chroot"
 cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 cp install-arch-base-utils.sh /mnt/
@@ -183,6 +196,7 @@ arch-chroot /mnt $(
     source /install-arch-base-utils.sh
     source /.env
 
+    clear
     ohai "Setting up locales"
     ln -sf /usr/share/zoneinfo/Europe/London /etc/localtime
     hwclock --systohc
@@ -191,15 +205,18 @@ arch-chroot /mnt $(
     echo "LANG=en_GB.UTF-8" >>/etc/locale.conf
     echo "KEYMAP=mac-uk" >>/etc/vconsole.conf
 
+    echo
     ohai "Configuring hostname and hosts file"
     echo "arch" >>/etc/hostname
     echo "127.0.0.1 localhost" >>/etc/hosts
     echo "::1       localhost" >>/etc/hosts
     echo "127.0.1.1 arch" >>/etc/hosts
 
+    clear
     ohai "Set root password"
     passwd root
 
+    echo
     ohai "Setup root user bash"
     echo "[[ -f ~/.bashrc ]] && . ~/.bashrc" >>${HOME}/.bash_profile
     # cp ${SCRIPT_DIR}/.bashrc ${HOME}/
