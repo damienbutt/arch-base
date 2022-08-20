@@ -174,4 +174,5 @@ sed -i "s/TIMELINE_LIMIT_HOURLY=\"10\"/TIMELINE_LIMIT_HOURLY=\"5\"/g" /etc/snapp
 
 cp ${SCRIPT_DIR}/.env /home/${USERNAME}/
 cp ${SCRIPT_DIR}/install-arch-base-utils.sh /home/${USERNAME}/
+cp ${SCRIPT_DIR}/arch-chroot-user.sh /home/${USERNAME}/
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/
