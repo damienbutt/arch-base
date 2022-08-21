@@ -82,9 +82,19 @@ ohai "Select your disk to format"
 lsblk
 
 echo
-read -p "Please enter disk to work on: (example /dev/sda): " DISK
+for (( ; ; )); do
+    read -p "Please enter disk to install Arch-Base on: (example /dev/sda): " DISK
+
+    if ! [ -b ${DISK} ]; then
+        echo "Disk ${DISK} does not exist. Please try again..."
+        continue
+    fi
+
+    break
+done
 
 echo
+ohai "Disk ${DISK} selected"
 warn "THIS WILL FORMAT AND DELETE ALL DATA ON THE DISK"
 
 echo
