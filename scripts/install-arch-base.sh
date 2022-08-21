@@ -120,6 +120,10 @@ y | Y | yes | Yes | YES)
     ohai "Setting up LUKS encryption"
     cryptsetup -y -v --type luks1 luksFormat ${ROOT_PARTITION}
 
+    if [ $? -ne 0 ]; then
+        abort "Error creating LUKS conatiner. Aborting..."
+    fi
+
     echo
     ohai "Opening LUKS volume"
     save_var CRYPTROOT_NAME "cryptroot"
