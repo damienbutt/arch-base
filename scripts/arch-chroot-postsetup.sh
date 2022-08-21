@@ -82,7 +82,7 @@ SERVICES=(
 )
 
 for SERVICE in "${SERVICES[@]}"; do
-    systemctl enable "${SERVICE}" >/dev/null
+    systemctl enable "${SERVICE}" >/dev/null 2>&1
 done
 
 echo "${USERNAME} ALL=(ALL) ALL" >"/etc/sudoers.d/${USERNAME}"
