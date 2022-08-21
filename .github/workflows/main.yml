@@ -1,0 +1,36 @@
+name: CI
+
+on: [push]
+
+jobs:
+  publish:
+    name: Publish
+
+    runs-on: ubuntu-latest
+
+    if: ${{ github.ref == 'refs/heads/master' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install (with cache)
+        uses: bahmutov/npm-install@v1
+        with:
+          install-command: yarn --frozen-lockfile --network-timeout 1000000
+
+      - name: Release
+        run: yarn semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+          GIT_AUTHOR_NAME: ${{ secrets.SEMANTIC_RELEASE_GIT_NAME }}
+          GIT_AUTHOR_EMAIL: ${{ secrets.SEMANTIC_RELEASE_GIT_EMAIL }}
+          GIT_COMMITTER_NAME: ${{ secrets.SEMANTIC_RELEASE_GIT_NAME }}
+          GIT_COMMITTER_EMAIL: ${{ secrets.SEMANTIC_RELEASE_GIT_EMAIL }}

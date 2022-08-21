@@ -21,6 +21,7 @@
         "node": ">=14"
     },
     "scripts": {
+        "semantic-release": "semantic-release",
         "commit": "git-cz",
         "prepare": "husky install",
         "doctoc": "doctoc --title '## Contents 📖' README.md",
