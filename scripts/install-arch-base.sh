@@ -67,7 +67,6 @@ timedatectl set-ntp true
 ohai "Detecting your country"
 save_var ISO "$(curl -s ifconfig.co/country-iso)"
 
-echo
 ohai "Setting up ${ISO} mirrors for faster downloads"
 if [[ -f /etc/pacman.d/mirrorlist ]]; then
     mv /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
