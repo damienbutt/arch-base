@@ -218,7 +218,7 @@ rm /mnt/install-arch-base-utils.sh
 rm /mnt/arch-chroot-setup.sh
 rm /mnt/arch-chroot-user.sh
 rm /mnt/arch-chroot-postsetup.sh
-rm /mnt/.env
+mv /mnt/.env /mnt/home/${USERNAME}/
 rm /mnt/home/${USERNAME}/install-arch-base-utils.sh
 rm /mnt/home/${USERNAME}/arch-chroot-user.sh
 cleanup
