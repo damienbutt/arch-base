@@ -136,10 +136,19 @@ if [[ ${CPU_CORES} -gt 2 ]]; then
 fi
 
 ohai "Create non-root user"
-read -p "Username: " USERNAME
-useradd -m ${USERNAME}
+for (( ; ; )); do
+    read -p "Username: " USERNAME
+
+    if [ id -u ${USERNAME} ] &>/dev/null; then
+        echo "Username \"${USERNAME}\" already exists on the system. Please use a different username..."
+        continue
+    fi
+
+    break
+done
+
+useradd -m -G wheel ${USERNAME}
 passwd ${USERNAME}
-usermod -aG wheel ${USERNAME}
 sed -i 's/^# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
 echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" >>"/etc/sudoers.d/${USERNAME}"
 save_var USERNAME ${USERNAME}
