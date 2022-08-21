@@ -41,7 +41,7 @@
                         { "type": "chore", "hidden": true },
                         { "type": "docs", "section": "Documentation" },
                         { "type": "style", "section": "Style" },
-                        { "type": "refactor", "section": "Refactor" },
+                        { "type": "refactor", "hidden": true },
                         { "type": "perf", "section": "Performance" },
                         { "type": "test", "hidden": true }
                     ]
