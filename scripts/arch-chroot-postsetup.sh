@@ -72,7 +72,6 @@ SERVICES=(
     fstrim.timer
     firewalld
     acpid
-    cronie
     zramd
     snapper-timeline.timer
     snapper-cleanup.timer
