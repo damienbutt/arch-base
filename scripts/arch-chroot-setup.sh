@@ -27,17 +27,21 @@ tty_red="$(tty_mkbold 31)"
 tty_bold="$(tty_mkbold 39)"
 tty_reset="$(tty_escape 0)"
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 source ${SCRIPT_DIR}/install-arch-base-utils.sh
 source ${SCRIPT_DIR}/.env
 
 ohai "Setting up locales"
 ln -sf /usr/share/zoneinfo/Europe/London /etc/localtime
+
+ohai "Setting up hardware clock"
 hwclock --systohc
+
+ohai "Setting up locales"
 sed -i '160s/.//' /etc/locale.gen
-locale-gen >/dev/null
 echo "LANG=en_GB.UTF-8" >>/etc/locale.conf
 echo "KEYMAP=uk" >>/etc/vconsole.conf
+locale-gen >/dev/null
 
 ohai "Configuring hostname and hosts file"
 echo "arch" >>/etc/hostname
@@ -45,7 +49,6 @@ echo "127.0.0.1 localhost" >>/etc/hosts
 echo "::1       localhost" >>/etc/hosts
 echo "127.0.1.1 arch" >>/etc/hosts
 
-clear
 ohai "Set root password"
 passwd root
 
@@ -108,7 +111,7 @@ for PKG in "${PKGS[@]}"; do
     pacman -S "$PKG" --noconfirm --needed
 done
 
-save_var CPU_TYPE "$(lscpu | awk '^/Vendor ID:/ {print $3}')"
+save_var CPU_TYPE "$(lscpu | awk '/^Vendor ID:/ {print $3}')"
 case ${CPU_TYPE} in
 GenuineIntel)
     ohai "Installing Intel microcode"
@@ -132,7 +135,6 @@ if [[ ${CPU_CORES} -gt 2 ]]; then
     sed -i "s/COMPRESSXZ=(xz -c -z -)/COMPRESSXZ=(xz -c -T ${CPU_CORES} -z -)/g" /etc/makepkg.conf
 fi
 
-clear
 ohai "Create non-root user"
 read -p "Username: " USERNAME
 useradd -m ${USERNAME}

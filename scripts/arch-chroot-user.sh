@@ -31,7 +31,6 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 source ${SCRIPT_DIR}/install-arch-base-utils.sh
 # source ${SCRIPT_DIR}/.env
 
-clear
 ohai "Installing Paru AUR Helper"
 git clone https://aur.archlinux.org/paru-bin.git ~/paru-bin
 cd ~/paru-bin/ && makepkg -si --noconfirm && cd ~
