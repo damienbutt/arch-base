@@ -28,7 +28,7 @@ which() {
     type -P "$@"
 }
 
-# Search PATH for the specified program that satisfies Homebrew requirements
+# Search PATH for the specified program
 # function which is set above
 find_tool() {
     if [[ $# -ne 1 ]]; then
@@ -42,6 +42,12 @@ find_tool() {
             break
         fi
     done < <(which -a "$1")
+}
+
+execute() {
+    if ! "$@"; then
+        abort "$(printf "Failed during: %s" "$(shell_join "$@")")"
+    fi
 }
 
 # export GET_SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
@@ -79,9 +85,9 @@ function print_header() {
 function reboot_after_delay() {
     local delay="${1}"
 
-    print_header "Rebooting in ${delay} seconds..." "Press CTRL+C to cancel the reboot"
+    ohai "Rebooting in ${delay} seconds..." "Press CTRL+C to cancel the reboot"
     for i in {1..${delay}}; do
-        echo "Rebooting in ${delay} seconds ..."
+        ohai "Rebooting in ${delay} seconds ..."
         sleep 1
         delay=$((delay - 1))
     done
@@ -91,8 +97,6 @@ function reboot_after_delay() {
 
 function cleanup() {
     unset SCRIPT_DIR
-    # unset REPO_DIR
-    # unset REPO_NAME
     unset ISO
     unset DISK
     unset EFI_PARTITION
@@ -108,9 +112,6 @@ function cleanup() {
     unset PKGS
     unset PKG
     unset ROOT_PARTITION_UUID
-    # unset GET_SCRIPT_DIR
-    # unset GET_REPO_DIR
-    # unset GET_REPO_NAME
 }
 
 function mounts_success() {
