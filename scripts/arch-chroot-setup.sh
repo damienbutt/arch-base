@@ -27,7 +27,7 @@ tty_red="$(tty_mkbold 31)"
 tty_bold="$(tty_mkbold 39)"
 tty_reset="$(tty_escape 0)"
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 source ${SCRIPT_DIR}/install-arch-base-utils.sh
 source ${SCRIPT_DIR}/.env
 
@@ -42,7 +42,7 @@ sed -i '160s/.//' /etc/locale.gen
 echo "LANG=en_GB.UTF-8" >>/etc/locale.conf
 echo "LANGUAGE=en_GB:en:C" >>/etc/locale.conf
 echo "KEYMAP=uk" >>/etc/vconsole.conf
-locale-gen >/dev/null
+locale-gen &>/dev/null
 
 ohai "Configuring hostname and hosts file"
 echo "arch" >>/etc/hostname

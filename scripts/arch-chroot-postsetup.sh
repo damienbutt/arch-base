@@ -27,7 +27,7 @@ tty_red="$(tty_mkbold 31)"
 tty_bold="$(tty_mkbold 39)"
 tty_reset="$(tty_escape 0)"
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 source ${SCRIPT_DIR}/install-arch-base-utils.sh
 source ${SCRIPT_DIR}/.env
 
@@ -38,10 +38,10 @@ sed -i 's/block filesystems keyboard fsck/block encrypt filesystems keyboard/' /
 mkinitcpio -p linux
 
 ohai "Setting up Arch Linux Netboot"
-wget https://archlinux.org/static/netboot/ipxe-arch.16e24bec1a7c.efi >/dev/null 2>&1
+wget https://archlinux.org/static/netboot/ipxe-arch.16e24bec1a7c.efi &>/dev/null
 mkdir -p /boot/efi/EFI/arch_netboot
 mv ipxe*.*.efi /boot/efi/EFI/arch_netboot/arch_netboot.efi
-efibootmgr --create --disk ${EFI_PARTITION} --part 1 --loader /EFI/arch_netboot/arch_netboot.efi --label "Arch Linux Netboot" >/dev/null 2>&1
+efibootmgr --create --disk ${EFI_PARTITION} --part 1 --loader /EFI/arch_netboot/arch_netboot.efi --label "Arch Linux Netboot" &>/dev/null
 
 ohai "Configuring Grub"
 save_var ROOT_PARTITION_UUID "$(blkid -o value -s UUID ${ROOT_PARTITION})"
@@ -83,7 +83,7 @@ SERVICES=(
 )
 
 for SERVICE in "${SERVICES[@]}"; do
-    systemctl enable "${SERVICE}" >/dev/null 2>&1
+    systemctl enable "${SERVICE}" &>/dev/null
 done
 
 echo "${USERNAME} ALL=(ALL) ALL" >"/etc/sudoers.d/${USERNAME}"

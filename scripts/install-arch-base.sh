@@ -34,7 +34,7 @@ tty_bold="$(tty_mkbold 39)"
 tty_reset="$(tty_escape 0)"
 
 # Check cURL is installed
-if ! command -v curl >/dev/null; then
+if ! command -v curl &>/dev/null; then
     abort "$(
         cat <<EOABORT
 You must install cURL before running this script. Run the following command:
@@ -57,21 +57,23 @@ source install-arch-base-utils.sh
 clear
 ohai "Starting Arch-Base installation"
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+SCRIPT_DIR="$(cd -- "$(dirname -- "")" &>/dev/null && pwd)"
 
 # Update the system clock
+ohai "Setting up NTP"
 timedatectl set-ntp true
 
 # Setup mirrors
-save_var ISO "$(curl -4 ifconfig.co/country-iso)"
+ohai "Detecting your country"
+save_var ISO "$(curl -s ifconfig.co/country-iso)"
 
 echo
 ohai "Setting up ${ISO} mirrors for faster downloads"
 if [[ -f /etc/pacman.d/mirrorlist ]]; then
     mv /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
 fi
-reflector -a 48 -c ${ISO} -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist >/dev/null
-pacman -Syyy --noconfirm >/dev/null
+reflector -a 48 -c ${ISO} -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist &>/dev/null
+pacman -Syyy --noconfirm &>/dev/null
 
 # Enable parallel downloads
 sed -i 's/^#Para/Para/' /etc/pacman.conf
@@ -187,7 +189,7 @@ echo "/swap/swapfile none swap defaults 0 0" >>/mnt/etc/fstab
 
 # Setup LUKS keyfile
 ohai "Setting up LUKS keyfile"
-dd bs=512 count=4 if=/dev/random of=/mnt/crypto_keyfile.bin iflag=fullblock >/dev/null 2>&1
+dd bs=512 count=4 if=/dev/random of=/mnt/crypto_keyfile.bin iflag=fullblock &>/dev/null
 chmod 600 /mnt/crypto_keyfile.bin
 chmod 600 /mnt/boot/initramfs-linux*
 
@@ -221,7 +223,7 @@ rm /mnt/home/${USERNAME}/install-arch-base-utils.sh
 rm /mnt/home/${USERNAME}/arch-chroot-user.sh
 cleanup
 
-umount -a >/dev/null 2>&1
+umount -a &>/dev/null
 
 ohai "Arch-Base installation successful!"
 
