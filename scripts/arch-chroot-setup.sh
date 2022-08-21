@@ -1,46 +1,67 @@
 #!/bin/bash
 
-echo "-------------------------------------------------"
-echo "Starting setup                                   "
-echo "-------------------------------------------------"
+set -u
 
-echo "-------------------------------------------------"
-echo "Setting up locales                               "
-echo "-------------------------------------------------"
+abort() {
+    printf "%s\n" "$@" >&2
+    exit 1
+}
+
+# Fail fast with a concise message when not using bash
+# Single brackets are needed here for POSIX compatibility
+if [ -z "${BASH_VERSION:-}" ]; then
+    abort "Bash is required to interpret this script."
+fi
+
+# String Formatters
+if [[ -t 1 ]]; then
+    tty_escape() { printf "\033[%sm" "$1"; }
+else
+    tty_escape() { :; }
+fi
+
+tty_mkbold() { tty_escape "1;$1"; }
+tty_underline="$(tty_escape "4;39")"
+tty_blue="$(tty_mkbold 34)"
+tty_red="$(tty_mkbold 31)"
+tty_bold="$(tty_mkbold 39)"
+tty_reset="$(tty_escape 0)"
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+source ${SCRIPT_DIR}/install-arch-base-utils.sh
+source ${SCRIPT_DIR}/.env
+
+ohai "Setting up timezone"
 ln -sf /usr/share/zoneinfo/Europe/London /etc/localtime
-hwclock --systohc
-sed -i '160s/.//' /etc/locale.gen
-locale-gen
-echo "LANG=en_GB.UTF-8" >>/etc/locale.conf
-echo "KEYMAP=uk" >>/etc/vconsole.conf
 
-echo "-------------------------------------------------"
-echo "Configuring hostname and hosts file              "
-echo "-------------------------------------------------"
+ohai "Setting up hardware clock"
+hwclock --systohc
+
+ohai "Setting up locales"
+sed -i '160s/.//' /etc/locale.gen
+echo "LANG=en_GB.UTF-8" >>/etc/locale.conf
+echo "LANGUAGE=en_GB:en:C" >>/etc/locale.conf
+echo "KEYMAP=uk" >>/etc/vconsole.conf
+locale-gen &>/dev/null
+
+ohai "Configuring hostname and hosts file"
 echo "arch" >>/etc/hostname
 echo "127.0.0.1 localhost" >>/etc/hosts
 echo "::1       localhost" >>/etc/hosts
 echo "127.0.1.1 arch" >>/etc/hosts
 
-echo "-------------------------------------------------"
-echo "Set root password                                "
-echo "-------------------------------------------------"
+ohai "Set root password"
 passwd root
 
-echo "-------------------------------------------------"
-echo "Setup root user bash                             "
-echo "-------------------------------------------------"
+echo
+ohai "Setup root user bash"
 echo "[[ -f ~/.bashrc ]] && . ~/.bashrc" >>${HOME}/.bash_profile
-cp ${SCRIPT_DIR}/.bashrc ${HOME}/
 touch ${HOME}/.bash_history
-source ${HOME}/.bashrc
 
-echo "-------------------------------------------------"
-echo "Installing system packages                       "
-echo "-------------------------------------------------"
+ohai "Installing system packages"
 sed -i 's/^#Para/Para/' /etc/pacman.conf
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-pacman -Sy --noconfirm
+pacman -Syyy --noconfirm
 PKGS=(
     'grub'
     'grub-btrfs'
@@ -53,7 +74,6 @@ PKGS=(
     'dosfstools'
     'base-devel'
     'linux-headers'
-    'cronie'
     'avahi'
     'xdg-user-dirs'
     'xdg-utils'
@@ -76,52 +96,38 @@ PKGS=(
     'os-prober'
     'ntfs-3g'
     'terminus-font'
-    'doas'
     'htop'
     'wget'
-    'tmux'
-    'zsh'
     'unzip'
     'nano'
-    'ranger'
-    'neofetch'
-    'ncdu'
-    'open-vm-tools'
     'snapper'
     'snap-pac'
     'ufw'
-    'speedtest-cli'
-    'mlocate'
     'apparmor'
-    'audit'
-    'tree'
 )
 
 for PKG in "${PKGS[@]}"; do
-    echo "Installing: ${PKG}"
+    ohai "Installing: ${PKG}"
     pacman -S "$PKG" --noconfirm --needed
 done
 
-CPU_TYPE=$(lscpu | awk '/Vendor ID:/ {print $3}')
+save_var CPU_TYPE "$(lscpu | awk '/^Vendor ID:/ {print $3}')"
 case ${CPU_TYPE} in
 GenuineIntel)
-    echo "Installing Intel microcode"
+    ohai "Installing Intel microcode"
     pacman -S --noconfirm intel-ucode
-    CPU_UCODE=intel-ucode.img
+    save_var CPU_UCODE "intel-ucode.img"
     ;;
 AuthenticAMD)
-    echo "Installing AMD microcode"
+    ohai "Installing AMD microcode"
     pacman -S --noconfirm amd-ucode
-    CPU_UCODE=amd-ucode.img
+    save_var CPU_UCODE "amd-ucode.img"
     ;;
 esac
 
-echo "-------------------------------------------------"
-echo "Setup MAKEPKG config                             "
-echo "-------------------------------------------------"
-CPU_CORES=$(grep -c ^processor /proc/cpuinfo)
+ohai "Setup MAKEPKG config"
+save_var CPU_CORES "$(grep -c ^processor /proc/cpuinfo)"
 echo "You have ${CPU_CORES} cores."
-echo "-------------------------------------------------"
 echo "Changing the makeflags for "${CPU_CORES}" cores."
 if [[ ${CPU_CORES} -gt 2 ]]; then
     sed -i "s/#MAKEFLAGS=\"-j2\"/MAKEFLAGS=\"-j${CPU_CORES}\"/g" /etc/makepkg.conf
@@ -129,23 +135,26 @@ if [[ ${CPU_CORES} -gt 2 ]]; then
     sed -i "s/COMPRESSXZ=(xz -c -z -)/COMPRESSXZ=(xz -c -T ${CPU_CORES} -z -)/g" /etc/makepkg.conf
 fi
 
-echo "-------------------------------------------------"
-echo "Create non-root user                             "
-echo "-------------------------------------------------"
-read -p "Username: " USERNAME
-useradd -m ${USERNAME}
+ohai "Create non-root user"
+for (( ; ; )); do
+    read -p "Username: " USERNAME
+
+    if [ id -u ${USERNAME} ] &>/dev/null; then
+        echo "Username \"${USERNAME}\" already exists on the system. Please use a different username..."
+        continue
+    fi
+
+    break
+done
+
+useradd -m -G wheel ${USERNAME}
 passwd ${USERNAME}
-usermod -aG wheel ${USERNAME}
 sed -i 's/^# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
 echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" >>"/etc/sudoers.d/${USERNAME}"
-echo "permit persist :wheel" >>/etc/doas.conf
-echo "permit persist :${USERNAME}" >>/etc/doas.conf
-echo "USERNAME=${USERNAME}" >>${SCRIPT_DIR}/.env
-export USERNAME
+save_var USERNAME ${USERNAME}
+cp ${HOME}/.bashrc /home/${USERNAME}/ && chown ${USERNAME}:${USERNAME} /home/${USERNAME}/.bashrc
 
-echo "-------------------------------------------------"
-echo "Setup Snapper snapshots                          "
-echo "-------------------------------------------------"
+ohai "Setup Snapper snapshots"
 umount /.snapshots
 rm -r /.snapshots
 snapper --no-dbus -c root create-config /
@@ -161,8 +170,7 @@ sed -i "s/TIMELINE_LIMIT_MONTHLY=\"10\"/TIMELINE_LIMIT_MONTHLY=\"0\"/g" /etc/sna
 sed -i "s/TIMELINE_LIMIT_DAILY=\"10\"/TIMELINE_LIMIT_DAILY=\"7\"/g" /etc/snapper/configs/root
 sed -i "s/TIMELINE_LIMIT_HOURLY=\"10\"/TIMELINE_LIMIT_HOURLY=\"5\"/g" /etc/snapper/configs/root
 
-echo "-------------------------------------------------"
-echo "Copying arch-base repo to user directory         "
-echo "-------------------------------------------------"
-cp -r ${SCRIPT_DIR} /home/${USERNAME}/
-chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/${SCRIPT_DIR}/
+cp ${SCRIPT_DIR}/.env /home/${USERNAME}/
+cp ${SCRIPT_DIR}/install-arch-base-utils.sh /home/${USERNAME}/
+cp ${SCRIPT_DIR}/arch-chroot-user.sh /home/${USERNAME}/
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/

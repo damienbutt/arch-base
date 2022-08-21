@@ -21,6 +21,7 @@
         "node": ">=14"
     },
     "scripts": {
+        "semantic-release": "semantic-release",
         "commit": "git-cz",
         "prepare": "husky install",
         "doctoc": "doctoc --title '## Contents 📖' README.md",
@@ -29,17 +30,17 @@
         "contrib:check": "all-contributors check"
     },
     "devDependencies": {
-        "@commitlint/cli": "^16.2.3",
-        "@commitlint/config-conventional": "^16.2.1",
+        "@commitlint/cli": "^17.0.3",
+        "@commitlint/config-conventional": "^17.0.3",
         "@semantic-release/changelog": "^6.0.1",
         "@semantic-release/git": "^10.0.1",
         "all-contributors-cli": "^6.20.0",
         "cz-conventional-changelog": "3.3.0",
         "doctoc": "^2.2.0",
         "husky": "^8.0.1",
-        "lint-staged": "^12.4.1",
-        "prettier": "^2.6.2",
-        "semantic-release": "^19.0.2"
+        "lint-staged": "^13.0.3",
+        "prettier": "^2.7.1",
+        "semantic-release": "^19.0.3"
     },
     "dependencies": {}
 }

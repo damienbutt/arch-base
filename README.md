@@ -15,8 +15,6 @@
 
 A collection of bash scripts to get Arch Linux up and running with ease.
 
-<!-- This is a slightly opinionated setup that uses an EFI boot partition and a BTRFS root partition encrypted with LUKS. There is no swap partition. Swap is provided using the combination of a 2GB swapfile and 1GB of ZRAM. The ZRAM will be the priority swap space before anything is written to the swapfile on disk. -->
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
@@ -31,30 +29,68 @@ A collection of bash scripts to get Arch Linux up and running with ease.
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-<!-- ## Minimum Recommended Hardware
-
--   2 CPU Cores
--   2GB RAM. 1GB will be reserved for ZRAM swap.
--   10GB HDD. 2GB will be reserved for swap. -->
-
 ## Features :package:
 
--   EFI
--   BTRFS
--   LUKS Encryption
--   ZRAM
--   Swapfile
+-   EFI Partition (260M)
+-   BTRFS Root Partition (Remaining Space)
+    -   Subvolumes
+        -   @
+        -   @home
+        -   @log
+        -   @cache
+        -   @snapshots
+        -   @swap
+    -   Automatic snapshots provided by `snapper` and `snap-pac`
+-   LUKS1 Full Disk Encryption including boot directory
+-   GRUB Bootloader
+-   Paru AUR Helper
+-   ZRAM (1GB)
+-   Swapfile (System Memory + 2GB)
+-   Arch NetBoot
 
 ## Usage :rocket:
 
 1. Download the latest version of the live ISO from [here](https://www.archlinux.org/download/) and boot into it.
-2. Run the following command:
+
+    - If you're installing on bare metal, you'll need to burn the ISO to a USB flash drive. A great tool for this is [Etcher](https://etcher.io/). It is free and open source software.
+
+2. (Optional) Setup WiFi.
+
+    - If you need to connect to WiFi for network connectivity, follow the instructions [here](https://wiki.archlinux.org/title/Iwd#iwctl).
+
+3. Confirm internet connectivity.
 
     ```bash
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/master/install.sh)"
+    ping -c 4 archlinux.org
     ```
 
-3. Follow prompts until the setup is complete.
+4. (Optional) Set the root user password to allow SSH access. This is not required but recommended to allow copy/paste functionality.
+
+    1. Get the IP address of the machine.
+
+        ```bash
+        ip a
+        ```
+
+    2. Set the root user password.
+
+        ```bash
+        passwd root
+        ```
+
+    3. From a remote machine SSH into the environment.
+
+        ```bash
+        ssh root@<ip>
+        ```
+
+5. Run the following command:
+
+    ```bash
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/install-arch-base.sh)"
+    ```
+
+6. Follow prompts until the setup is complete.
 
 ## Team :soccer:
 
@@ -86,6 +122,11 @@ Thanks go to these awesome people ([emoji key](https://allcontributors.org/docs/
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/features/security"><img src="https://avatars.githubusercontent.com/u/27347476?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Dependabot</b></sub></a><br /><a href="#maintenance-dependabot" title="Maintenance">🚧</a></td>
+  </tr>
+</table>
 
 <!-- markdownlint-restore -->
 <!-- prettier-ignore-end -->
