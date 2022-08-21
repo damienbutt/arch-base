@@ -31,19 +31,6 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 source ${SCRIPT_DIR}/install-arch-base-utils.sh
 source ${SCRIPT_DIR}/.env
 
-# Setup swapfile
-# ohai "Creating swapfile"
-# save_var TOTAL_MEM "$(awk '/MemTotal/ {printf( "%d\n", $2 / 1024 )}' /proc/meminfo)"
-# save_var SWAPFILE_SIZE "$((${TOTAL_MEM} + 2048))"
-# truncate -s 0 /swap/swapfile
-# chattr +C /swap/
-# btrfs property set /swap/ compression none
-# dd if=/dev/zero of=/swap/swapfile bs=1M count=${SWAPFILE_SIZE} status=progress
-# chmod 600 /swap/swapfile
-# mkswap /swap/swapfile
-# swapon /swap/swapfile
-# echo "/swap/swapfile none swap defaults 0 0" >>/etc/fstab
-
 ohai "Setting up timezone"
 ln -sf /usr/share/zoneinfo/Europe/London /etc/localtime
 
