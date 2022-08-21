@@ -57,7 +57,7 @@ source install-arch-base-utils.sh
 clear
 ohai "Starting Arch-Base installation"
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null 2>&1) && pwd)"
 
 # Update the system clock
 timedatectl set-ntp true
