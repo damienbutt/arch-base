@@ -57,7 +57,7 @@ source install-arch-base-utils.sh
 clear
 ohai "Starting Arch-Base installation"
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null 2>&1) && pwd)"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1) && pwd)"
 
 # Update the system clock
 timedatectl set-ntp true
@@ -78,7 +78,7 @@ sed -i 's/^#Para/Para/' /etc/pacman.conf
 
 # Parition and format the disk
 clear
-ohai "Select your disk to format"
+ohai "Select the disk to format"
 lsblk
 
 echo
@@ -116,7 +116,6 @@ y | Y | yes | Yes | YES)
         save_var ROOT_PARTITION "${DISK}2"
     fi
 
-    clear
     ohai "Setting up LUKS encryption"
     cryptsetup -y -v --type luks1 luksFormat ${ROOT_PARTITION}
 
@@ -130,7 +129,7 @@ y | Y | yes | Yes | YES)
     save_var CRYPTROOT_PATH "/dev/mapper/${CRYPTROOT_NAME}"
     cryptsetup open ${ROOT_PARTITION} ${CRYPTROOT_NAME}
 
-    clear
+    echo
     ohai "Formatting the partitions"
     mkfs.fat -F32 ${EFI_PARTITION}
     mkfs.btrfs ${CRYPTROOT_PATH}
@@ -150,7 +149,6 @@ y | Y | yes | Yes | YES)
 esac
 
 # Mount the filesystems
-echo
 ohai "Mounting the filesystems"
 mount -o noatime,compress=zstd,space_cache=v2,ssd,discard=async,subvol=@ ${CRYPTROOT_PATH} /mnt
 mkdir -p /mnt/boot/efi
@@ -168,12 +166,10 @@ if ! mounts_success; then
 fi
 
 # Install essential packages
-clear
 ohai "Installing essential packages"
 pacstrap /mnt base linux linux-firmware btrfs-progs git vim --noconfirm --needed
 
 #Fstab
-echo
 ohai "Generating fstab"
 genfstab -U /mnt >>/mnt/etc/fstab
 
@@ -192,13 +188,11 @@ swapon /mnt/swap/swapfile
 echo "/swap/swapfile none swap defaults 0 0" >>/mnt/etc/fstab
 
 # Setup LUKS keyfile
-echo
 ohai "Setting up LUKS keyfile"
-dd bs=512 count=4 if=/dev/random of=/mnt/crypto_keyfile.bin iflag=fullblock
+dd bs=512 count=4 if=/dev/random of=/mnt/crypto_keyfile.bin iflag=fullblock >/dev/null 2>&1
 chmod 600 /mnt/crypto_keyfile.bin
 chmod 600 /mnt/boot/initramfs-linux*
 
-echo
 ohai "Adding the LUKS keyfile" "Enter your disk encryption password when prompted"
 cryptsetup luksAddKey ${ROOT_PARTITION} /mnt/crypto_keyfile.bin
 
@@ -219,14 +213,22 @@ source /mnt/.env
 arch-chroot /mnt /usr/bin/runuser -u ${USERNAME} -- /home/${USERNAME}/arch-chroot-user.sh
 arch-chroot /mnt /arch-chroot-postsetup.sh
 
+ohai "Cleaning up"
 cleanup
+rm /mnt/install-arch-base-utils.sh
+rm /mnt/arch-chroot-setup.sh
+rm /mnt/arch-chroot-user.sh
+rm /mnt/arch-chroot-postsetup.sh
+rm /mnt/.env
+rm /mnt/home/${USERNAME}/install-arch-base-utils.sh
+rm /mnt/home/${USERNAME}/arch-chroot-user.sh
 
 umount -a >/dev/null 2>&1
 
 ohai "Arch-Base installation successful!"
-echo
 
 ohai "Next steps:"
 cat <<EOS
     - Run ${tty_bold}reboot${tty_reset} to get started
 EOS
+echo
