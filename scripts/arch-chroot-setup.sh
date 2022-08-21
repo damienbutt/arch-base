@@ -116,7 +116,6 @@ PKGS=(
     'snap-pac'
     'ufw'
     'apparmor'
-    'audit'
 )
 
 for PKG in "${PKGS[@]}"; do
