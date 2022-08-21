@@ -143,6 +143,7 @@ usermod -aG wheel ${USERNAME}
 sed -i 's/^# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
 echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" >>"/etc/sudoers.d/${USERNAME}"
 save_var USERNAME ${USERNAME}
+cp ${HOME}/.bashrc /home/${USERNAME}/ && chown ${USERNAME}:${USERNAME} /home/${USERNAME}/.bashrc
 
 ohai "Setup Snapper snapshots"
 umount /.snapshots
