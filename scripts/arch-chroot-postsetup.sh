@@ -39,7 +39,7 @@ mkinitcpio -p linux
 
 ohai "Setting up Arch Linux Netboot"
 wget https://archlinux.org/static/netboot/ipxe-arch.16e24bec1a7c.efi >/dev/null 2>&1
-mkdir /boot/efi/EFI/arch_netboot
+mkdir -p /boot/efi/EFI/arch_netboot
 mv ipxe*.*.efi /boot/efi/EFI/arch_netboot/arch_netboot.efi
 efibootmgr --create --disk ${EFI_PARTITION} --part 1 --loader /EFI/arch_netboot/arch_netboot.efi --label "Arch Linux Netboot" >/dev/null 2>&1
 
