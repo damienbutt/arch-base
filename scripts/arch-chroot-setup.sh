@@ -61,7 +61,7 @@ touch ${HOME}/.bash_history
 ohai "Installing system packages"
 sed -i 's/^#Para/Para/' /etc/pacman.conf
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-pacman -Sy --noconfirm
+pacman -Syyy --noconfirm
 PKGS=(
     'grub'
     'grub-btrfs'
