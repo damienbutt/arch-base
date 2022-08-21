@@ -86,6 +86,3 @@ for SERVICE in "${SERVICES[@]}"; do
 done
 
 echo "${USERNAME} ALL=(ALL) ALL" >"/etc/sudoers.d/${USERNAME}"
-
-ohai "Setting user (${USERNAME}) default shell to ZSH"
-usermod -s /bin/zsh ${USERNAME}
