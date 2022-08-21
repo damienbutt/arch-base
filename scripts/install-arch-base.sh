@@ -221,12 +221,12 @@ arch-chroot /mnt /arch-chroot-postsetup.sh
 
 cleanup
 
-umount -a >/dev/null
+umount -a >/dev/null 2>&1
 
 ohai "Arch-Base installation successful!"
 echo
 
 ohai "Next steps:"
 cat <<EOS
-- Run ${tty_bold}reboot${tty_reset} to get started
+    - Run ${tty_bold}reboot${tty_reset} to get started
 EOS
