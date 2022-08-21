@@ -173,19 +173,19 @@ pacstrap /mnt base linux linux-firmware btrfs-progs git vim --noconfirm --needed
 ohai "Generating fstab"
 genfstab -U /mnt >>/mnt/etc/fstab
 
-# Setup swapfile
-ohai "Creating swapfile"
-TOTAL_MEM=$(awk '/MemTotal/ {printf( "%d\n", $2 / 1024 )}' /proc/meminfo)
-SWAPFILE_SIZE=$((${TOTAL_MEM} + 2048))
-# touch /mnt/swap/swapfile
-truncate -s 0 /mnt/swap/swapfile
-chattr +C /mnt/swap/
-btrfs property set /mnt/swap/ compression none
-dd if=/dev/zero of=/mnt/swap/swapfile bs=1M count=${SWAPFILE_SIZE} status=progress
-chmod 600 /mnt/swap/swapfile
-mkswap /mnt/swap/swapfile
-swapon /mnt/swap/swapfile
-echo "/swap/swapfile none swap defaults 0 0" >>/mnt/etc/fstab
+# # Setup swapfile
+# ohai "Creating swapfile"
+# save_var TOTAL_MEM "$(awk '/MemTotal/ {printf( "%d\n", $2 / 1024 )}' /proc/meminfo)"
+# save_var SWAPFILE_SIZE "$((${TOTAL_MEM} + 2048))"
+# # touch /mnt/swap/swapfile
+# truncate -s 0 /mnt/swap/swapfile
+# chattr +C /mnt/swap/
+# btrfs property set /mnt/swap/ compression none
+# dd if=/dev/zero of=/mnt/swap/swapfile bs=1M count=${SWAPFILE_SIZE} status=progress
+# chmod 600 /mnt/swap/swapfile
+# mkswap /mnt/swap/swapfile
+# swapon /mnt/swap/swapfile
+# echo "/swap/swapfile none swap defaults 0 0" >>/mnt/etc/fstab
 
 # Setup LUKS keyfile
 ohai "Setting up LUKS keyfile"
