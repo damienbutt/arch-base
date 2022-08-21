@@ -15,8 +15,6 @@
 
 A collection of bash scripts to get Arch Linux up and running with ease.
 
-<!-- This is a slightly opinionated setup that uses an EFI boot partition and a BTRFS root partition encrypted with LUKS. There is no swap partition. Swap is provided using the combination of a 2GB swapfile and 1GB of ZRAM. The ZRAM will be the priority swap space before anything is written to the swapfile on disk. -->
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
@@ -31,29 +29,34 @@ A collection of bash scripts to get Arch Linux up and running with ease.
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-<!-- ## Minimum Recommended Hardware
-
--   2 CPU Cores
--   2GB RAM. 1GB will be reserved for ZRAM swap.
--   10GB HDD. 2GB will be reserved for swap. -->
-
 ## Features :package:
 
--   EFI
--   BTRFS
--   LUKS Encryption
--   ZRAM
--   Swapfile
+-   EFI Partition (260M)
+-   BTRFS Root Partition (Remaining Space)
+    -   Subvolumes
+        -   @
+        -   @home
+        -   @log
+        -   @cache
+        -   @snapshots
+        -   @swap
+    -   Automatic snapshots provided by `snapper` and `snap-pac`
+-   LUKS1 Full Disk Encryption including boot directory
+-   GRUB Bootloader
+-   Paru AUR Helper
+-   ZRAM (1GB)
+-   Swapfile (System Memory + 2GB)
+-   Arch NetBoot
 
 ## Usage :rocket:
 
 1. Download the latest version of the live ISO from [here](https://www.archlinux.org/download/) and boot into it.
 
-    -   If you're installing on bare metal, you'll need to burn the ISO to a USB flash drive. A great tool for this is [Etcher](https://etcher.io/). It is free and open source software.
+    - If you're installing on bare metal, you'll need to burn the ISO to a USB flash drive. A great tool for this is [Etcher](https://etcher.io/). It is free and open source software.
 
 2. (Optional) Setup WiFi.
 
-    -   If you need to connect to WiFi for network connectivity, follow the instructions [here](https://wiki.archlinux.org/title/Iwd#iwctl).
+    - If you need to connect to WiFi for network connectivity, follow the instructions [here](https://wiki.archlinux.org/title/Iwd#iwctl).
 
 3. Confirm internet connectivity.
 
@@ -109,7 +112,9 @@ This project is maintained by the following person(s) and a bunch of [awesome co
 ## Contributors :sparkles:
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 Thanks go to these awesome people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
