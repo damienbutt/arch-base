@@ -40,6 +40,7 @@ hwclock --systohc
 ohai "Setting up locales"
 sed -i '160s/.//' /etc/locale.gen
 echo "LANG=en_GB.UTF-8" >>/etc/locale.conf
+echo "LANGUAGE=en_GB:en:C" >>/etc/locale.conf
 echo "KEYMAP=uk" >>/etc/vconsole.conf
 locale-gen >/dev/null
 
