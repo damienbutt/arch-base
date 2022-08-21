@@ -214,7 +214,6 @@ arch-chroot /mnt /usr/bin/runuser -u ${USERNAME} -- /home/${USERNAME}/arch-chroo
 arch-chroot /mnt /arch-chroot-postsetup.sh
 
 ohai "Cleaning up"
-cleanup
 rm /mnt/install-arch-base-utils.sh
 rm /mnt/arch-chroot-setup.sh
 rm /mnt/arch-chroot-user.sh
@@ -222,6 +221,7 @@ rm /mnt/arch-chroot-postsetup.sh
 rm /mnt/.env
 rm /mnt/home/${USERNAME}/install-arch-base-utils.sh
 rm /mnt/home/${USERNAME}/arch-chroot-user.sh
+cleanup
 
 umount -a >/dev/null 2>&1
 
