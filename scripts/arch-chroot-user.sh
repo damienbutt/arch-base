@@ -27,9 +27,8 @@ tty_red="$(tty_mkbold 31)"
 tty_bold="$(tty_mkbold 39)"
 tty_reset="$(tty_escape 0)"
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 source ${SCRIPT_DIR}/install-arch-base-utils.sh
-# source ${SCRIPT_DIR}/.env
 
 ohai "Installing Paru AUR Helper"
 git clone https://aur.archlinux.org/paru-bin.git ~/paru-bin
