@@ -1,0 +1,267 @@
+# Gum Integration for Arch-Base
+
+This document describes the enhanced interactive features added to the Arch-Base installation scripts using [Gum](https://github.com/charmbracelet/gum) by Charm.
+
+## What is Gum?
+
+Gum is a tool for glamorous shell scripts that provides beautiful, interactive terminal interfaces. It allows creating forms, prompts, spinners, and other UI elements that make command-line tools more user-friendly.
+
+## Automatic Installation ✨
+
+**No manual installation required!** The Arch-Base scripts now automatically install Gum when using interactive mode:
+
+```bash
+# Just run the interactive wizard - Gum will be installed automatically!
+sudo ./scripts/interactive-config.sh
+
+# Or use the orchestrator
+sudo ./scripts/arch-base-install.sh config
+```
+
+The installation system will:
+
+- ✅ Detect your package manager (pacman, apt, dnf, brew)
+- ✅ Install Gum via your system's package manager
+- ✅ Fall back to binary installation if package manager fails
+- ✅ Handle multiple architectures (x86_64, arm64, armv7)
+- ✅ Support Linux, macOS, and other Unix-like systems
+
+### Manual Installation (if needed)
+
+If automatic installation fails, you can install manually:
+
+```bash
+# Arch Linux
+sudo pacman -S gum
+
+# Ubuntu/Debian
+sudo apt install gum
+
+# Fedora
+sudo dnf install gum
+
+# macOS
+brew install gum
+
+# Or download from: https://github.com/charmbracelet/gum/releases
+```
+
+## Enhanced Features
+
+### 🎨 Interactive Configuration Wizard
+
+The new `interactive-config.sh` script provides a beautiful, step-by-step configuration wizard:
+
+```bash
+# Start the interactive wizard
+sudo ./scripts/interactive-config.sh
+
+# Or use the orchestrator
+sudo ./scripts/arch-base-install.sh config
+```
+
+**Features:**
+
+- 🖥️ System configuration (hostname, timezone, locale, keymap)
+- 👤 User setup with group selection
+- 💾 Visual disk selection with warnings
+- 📦 Package preset selection
+- ⚙️ Installation behavior configuration
+- 📋 Configuration summary and confirmation
+
+### 🎯 Enhanced User Interface
+
+All scripts now support gum for improved interactivity:
+
+#### Progress Tracking
+
+```bash
+# Beautiful progress indicators with percentages
+Step 5/12 (42%): Installing base packages
+████████░░░░░░░░░░░░
+```
+
+#### Interactive Confirmations
+
+```bash
+# Elegant confirmation dialogs
+? Are you sure you want to continue? (y/N)
+```
+
+#### Styled Messages
+
+- ✅ **Success messages** with green styling
+- ⚠️ **Warning messages** with yellow borders
+- ❌ **Error messages** with red highlighting
+- ℹ️ **Info messages** with blue accents
+
+#### Selection Menus
+
+```bash
+# Beautiful selection interfaces
+? Select target disk:
+  /dev/sda (250GB SSD)
+❯ /dev/nvme0n1 (500GB NVMe)
+  /dev/sdb (1TB HDD)
+```
+
+### 🔄 Fallback Support
+
+All gum features have graceful fallbacks for systems without gum installed:
+
+- **With gum**: Beautiful interactive interfaces
+- **Without gum**: Traditional text-based prompts
+
+You can disable gum interface using:
+
+```bash
+sudo ./scripts/arch-base-install.sh --no-gum
+```
+
+## Usage Examples
+
+### 1. Interactive Configuration (Recommended)
+
+```bash
+sudo ./scripts/arch-base-install.sh config
+```
+
+This launches the full interactive wizard that guides you through all configuration options.
+
+### 2. Quick Setup with Gum Features
+
+```bash
+sudo ./scripts/arch-base-install.sh
+```
+
+Uses gum for enhanced prompts and progress display during installation.
+
+### 3. Automated with Custom Config
+
+```bash
+sudo ./scripts/arch-base-install.sh -c my-config.sh -y
+```
+
+Bypasses interactive elements but still uses gum for progress display.
+
+### 4. Traditional Mode
+
+```bash
+sudo ./scripts/arch-base-install.sh --no-gum
+```
+
+Disables all gum features, using traditional text interfaces.
+
+## Interactive Wizard Features
+
+### System Configuration
+
+- **Hostname**: Text input with validation
+- **Timezone**: Two-level selection (Region → City)
+- **Locale**: Choose from common locales or enter custom
+- **Keymap**: Select keyboard layout
+
+### User Configuration
+
+- **Username**: Required text input
+- **Groups**: Multi-select from common groups (wheel, audio, video, etc.)
+
+### Disk Configuration
+
+- **Visual disk listing**: Shows all available disks with details
+- **Safety warnings**: Multiple confirmation levels for data destruction
+- **EFI partition size**: Preset options or custom size
+- **LUKS type**: Choose between LUKS1/LUKS2 with explanations
+
+### Package Selection
+
+- **Presets**: Minimal, Standard, Development, Desktop, or Custom
+- **Additional packages**: Multi-select from common packages
+- **Custom packages**: Text input for additional packages
+
+### Installation Behavior
+
+- **Swap configuration**: Enable/disable with size options
+- **Security options**: LUKS keyfile configuration
+- **Installation mode**: Skip reboot and other options
+
+## Configuration Output
+
+The interactive wizard generates a `config.local.sh` file with all your selections:
+
+```bash
+#!/bin/bash
+# Generated by interactive wizard on 2025-08-16
+
+HOSTNAME="gaming-rig"
+USERNAME="gamer"
+TARGET_DISK="/dev/nvme0n1"
+TIMEZONE="America/New_York"
+ESSENTIAL_PACKAGES="btrfs-progs git vim sudo networkmanager firefox steam"
+# ... more configuration
+```
+
+## Development Features
+
+### New Functions in common.sh
+
+- `has_gum()`: Check if gum is available
+- `get_input()`: Enhanced input with gum support
+- `select_option()`: Single selection menus
+- `select_multiple()`: Multi-select menus
+- `display_message()`: Styled message display
+- `show_spinner()`: Loading indicators
+
+### Enhanced Progress Tracking
+
+- Visual progress bars
+- Step counters with percentages
+- Styled step headers
+
+### Improved Error Handling
+
+- Styled error messages
+- Better visual feedback
+- Graceful fallbacks
+
+## Benefits
+
+1. **User Experience**: Beautiful, intuitive interfaces
+2. **Error Prevention**: Clear warnings and confirmations
+3. **Accessibility**: Visual progress and status indicators
+4. **Flexibility**: Works with or without gum
+5. **Maintainability**: Clean separation of UI and logic
+
+## Requirements
+
+- **Optional**: Gum for enhanced interface
+- **Fallback**: Works without gum using traditional prompts
+- **Arch Linux**: Live ISO or installed system
+- **Root privileges**: Required for installation
+
+## Troubleshooting
+
+### Gum Not Found
+
+If gum is not available, the scripts automatically fall back to traditional interfaces. Install gum for the enhanced experience.
+
+### Display Issues
+
+If you experience display issues with gum:
+
+```bash
+export USE_GUM=false
+```
+
+### Terminal Compatibility
+
+Gum works best with modern terminals. For older terminals, use the `--no-gum` flag.
+
+## Future Enhancements
+
+- [ ] File browser for configuration selection
+- [ ] Real-time disk usage monitoring
+- [ ] Network configuration wizard
+- [ ] Desktop environment selection
+- [ ] Theme customization options
+- [ ] Multi-language support

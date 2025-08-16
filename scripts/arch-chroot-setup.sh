@@ -1,131 +1,140 @@
 #!/bin/bash
 
-set -u
+set -euo pipefail
 
-abort() {
-    printf "%s\n" "$@" >&2
-    exit 1
-}
-
-# Fail fast with a concise message when not using bash
-# Single brackets are needed here for POSIX compatibility
-if [ -z "${BASH_VERSION:-}" ]; then
-    abort "Bash is required to interpret this script."
-fi
-
-# String Formatters
-if [[ -t 1 ]]; then
-    tty_escape() { printf "\033[%sm" "$1"; }
-else
-    tty_escape() { :; }
-fi
-
-tty_mkbold() { tty_escape "1;$1"; }
-tty_underline="$(tty_escape "4;39")"
-tty_blue="$(tty_mkbold 34)"
-tty_red="$(tty_mkbold 31)"
-tty_bold="$(tty_mkbold 39)"
-tty_reset="$(tty_escape 0)"
-
+# Source common functions and environment
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-source ${SCRIPT_DIR}/install-arch-base-utils.sh
+source ${SCRIPT_DIR}/common.sh
 source ${SCRIPT_DIR}/.env
 
-ohai "Setting up timezone"
-ln -sf /usr/share/zoneinfo/Europe/London /etc/localtime
+log_info "Setting up timezone"
+ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
 
-ohai "Setting up hardware clock"
+log_info "Setting up hardware clock"
 hwclock --systohc
 
-ohai "Setting up locales"
-sed -i '160s/.//' /etc/locale.gen
-echo "LANG=en_GB.UTF-8" >>/etc/locale.conf
-echo "LANGUAGE=en_GB:en:C" >>/etc/locale.conf
-echo "KEYMAP=uk" >>/etc/vconsole.conf
-locale-gen &>/dev/null
+log_info "Setting up locales"
+echo "${LOCALE} UTF-8" >>/etc/locale.gen
+locale-gen
+echo "LANG=${LOCALE}" >/etc/locale.conf
+echo "KEYMAP=${KEYMAP}" >/etc/vconsole.conf
 
-ohai "Configuring hostname and hosts file"
-echo "arch" >>/etc/hostname
+log_info "Configuring hostname and hosts file"
+echo "${HOSTNAME}" >/etc/hostname
 echo "127.0.0.1 localhost" >>/etc/hosts
 echo "::1       localhost" >>/etc/hosts
-echo "127.0.1.1 arch" >>/etc/hosts
+echo "127.0.1.1 ${HOSTNAME}.localdomain ${HOSTNAME}" >>/etc/hosts
 
-ohai "Set root password"
-passwd root
+log_info "Set root password"
+echo "root:${ROOT_PASSWORD}" | chpasswd
 
-echo
-ohai "Setup root user bash"
+log_info "Setup root user bash"
 echo "[[ -f ~/.bashrc ]] && . ~/.bashrc" >>${HOME}/.bash_profile
 touch ${HOME}/.bash_history
 
-ohai "Installing system packages"
+log_info "Installing system packages"
 sed -i 's/^#Para/Para/' /etc/pacman.conf
 sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 pacman -Syyy --noconfirm
-PKGS=(
-    'grub'
-    'grub-btrfs'
-    'efibootmgr'
-    'networkmanager'
-    'network-manager-applet'
-    'dialog'
-    'wpa_supplicant'
-    'mtools'
-    'dosfstools'
-    'base-devel'
-    'linux-headers'
-    'avahi'
-    'xdg-user-dirs'
-    'xdg-utils'
-    'gvfs'
-    'gvfs-smb'
-    'nfs-utils'
-    'inetutils'
-    'dnsutils'
-    'bash-completion'
-    'openssh'
-    'rsync'
-    'reflector'
-    'acpi'
-    'acpi_call'
-    'ipset'
-    'firewalld'
-    'sof-firmware'
-    'nss-mdns'
-    'acpid'
-    'os-prober'
-    'ntfs-3g'
-    'terminus-font'
-    'htop'
-    'wget'
-    'unzip'
-    'nano'
-    'snapper'
-    'snap-pac'
-    'ufw'
-    'apparmor'
+
+# Essential packages for a minimal base system
+ESSENTIAL_PKGS=(
+    'grub'              # Bootloader
+    'grub-btrfs'        # BTRFS integration for GRUB
+    'efibootmgr'        # EFI boot management
+    'networkmanager'    # Network management
+    'dialog'            # For network configuration TUI
+    'wpa_supplicant'    # WiFi authentication
+    'mtools'            # Tools for FAT filesystems
+    'dosfstools'        # FAT filesystem utilities
+    'openssh'           # SSH server/client
+    'bash-completion'   # Command completion
+    'reflector'         # Mirror list management
+    'rsync'             # File synchronization
 )
 
-for PKG in "${PKGS[@]}"; do
-    ohai "Installing: ${PKG}"
+# Optional packages (can be disabled for ultra-minimal system)
+OPTIONAL_PKGS=(
+    'base-devel'        # Development tools (needed for AUR)
+    'linux-headers'     # Kernel headers (needed for some modules)
+    'acpi'              # Power management
+    'acpi_call'         # ACPI call interface
+    'acpid'             # ACPI daemon
+    'sof-firmware'      # Sound firmware
+    'terminus-font'     # Console font
+    'vim'               # Text editor
+    'snapper'           # BTRFS snapshots
+    'snap-pac'          # Automatic snapshots with pacman
+    'dnsutils'          # DNS utilities (dig, nslookup)
+    'inetutils'         # Network utilities
+)
+
+# Security packages (optional for base system)
+SECURITY_PKGS=(
+    'ufw'               # Simple firewall
+    'apparmor'          # MAC security
+)
+
+# Install essential packages
+for PKG in "${ESSENTIAL_PKGS[@]}"; do
+    log_info "Installing essential: ${PKG}"
     pacman -S "$PKG" --noconfirm --needed
 done
+
+# Handle minimal install override
+if [[ "${MINIMAL_INSTALL:-false}" == "true" ]]; then
+    log_info "Minimal install mode: Skipping optional and security packages"
+else
+    # Ask about optional packages in interactive mode
+    if [[ "${INTERACTIVE_MODE:-true}" == "true" ]]; then
+        echo
+        if gum confirm "Install optional packages (development tools, utilities)?" 2>/dev/null || confirm "Install optional packages (development tools, utilities)?"; then
+            for PKG in "${OPTIONAL_PKGS[@]}"; do
+                log_info "Installing optional: ${PKG}"
+                pacman -S "$PKG" --noconfirm --needed
+            done
+        fi
+
+        echo
+        if gum confirm "Install security packages (firewall, AppArmor)?" 2>/dev/null || confirm "Install security packages (firewall, AppArmor)?"; then
+            for PKG in "${SECURITY_PKGS[@]}"; do
+                log_info "Installing security: ${PKG}"
+                pacman -S "$PKG" --noconfirm --needed
+            done
+        fi
+    else
+        # In non-interactive mode, check configuration variables
+        if [[ "${INSTALL_OPTIONAL_PACKAGES:-false}" == "true" ]]; then
+            for PKG in "${OPTIONAL_PKGS[@]}"; do
+                log_info "Installing optional: ${PKG}"
+                pacman -S "$PKG" --noconfirm --needed
+            done
+        fi
+
+        if [[ "${INSTALL_SECURITY_PACKAGES:-false}" == "true" ]]; then
+            for PKG in "${SECURITY_PKGS[@]}"; do
+                log_info "Installing security: ${PKG}"
+                pacman -S "$PKG" --noconfirm --needed
+            done
+        fi
+    fi
+fi
 
 save_var CPU_TYPE "$(lscpu | awk '/^Vendor ID:/ {print $3}')"
 case ${CPU_TYPE} in
 GenuineIntel)
-    ohai "Installing Intel microcode"
+    log_info "Installing Intel microcode"
     pacman -S --noconfirm intel-ucode
     save_var CPU_UCODE "intel-ucode.img"
     ;;
 AuthenticAMD)
-    ohai "Installing AMD microcode"
+    log_info "Installing AMD microcode"
     pacman -S --noconfirm amd-ucode
     save_var CPU_UCODE "amd-ucode.img"
     ;;
 esac
 
-ohai "Setup MAKEPKG config"
+log_info "Setup MAKEPKG config"
 save_var CPU_CORES "$(grep -c ^processor /proc/cpuinfo)"
 echo "You have ${CPU_CORES} cores."
 echo "Changing the makeflags for "${CPU_CORES}" cores."
@@ -135,7 +144,7 @@ if [[ ${CPU_CORES} -gt 2 ]]; then
     sed -i "s/COMPRESSXZ=(xz -c -z -)/COMPRESSXZ=(xz -c -T ${CPU_CORES} -z -)/g" /etc/makepkg.conf
 fi
 
-ohai "Create non-root user"
+log_info "Create non-root user"
 for (( ; ; )); do
     read -p "Username: " USERNAME
 
@@ -154,7 +163,7 @@ echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" >>"/etc/sudoers.d/${USERNAME}"
 save_var USERNAME ${USERNAME}
 cp ${HOME}/.bashrc /home/${USERNAME}/ && chown ${USERNAME}:${USERNAME} /home/${USERNAME}/.bashrc
 
-ohai "Setup Snapper snapshots"
+log_info "Setup Snapper snapshots"
 umount /.snapshots
 rm -r /.snapshots
 snapper --no-dbus -c root create-config /
