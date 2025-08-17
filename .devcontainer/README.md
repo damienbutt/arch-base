@@ -65,6 +65,7 @@ Pre-installed tools relevant to Arch Linux installation:
     - Setup script installs all tools and dependencies
 
 4. **Start Developing**:
+
     ```bash
     make help          # See all available commands
     make test          # Run tests

@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - "tui-prototype/go.mod"
-      - "tui-prototype/go.sum"
+      - "go.mod"
+      - "go.sum"
       - ".goreleaser.yaml"
       - "lefthook.yml"
 
@@ -32,7 +32,6 @@ jobs:
           go install golang.org/x/vuln/cmd/govulncheck@latest
 
       - name: Run gosec security scanner
-        working-directory: ./tui-prototype
         run: |
           gosec -fmt sarif -out gosec-report.sarif ./...
         continue-on-error: true
@@ -41,11 +40,10 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: tui-prototype/gosec-report.sarif
+          sarif_file: gosec-report.sarif
           category: gosec
 
       - name: Run vulnerability check
-        working-directory: ./tui-prototype
         run: govulncheck ./...
 
   dependency-update:
@@ -65,7 +63,6 @@ jobs:
           go-version: "1.21"
 
       - name: Update Go dependencies
-        working-directory: ./tui-prototype
         run: |
           go get -u ./...
           go mod tidy
@@ -131,7 +128,6 @@ jobs:
         run: go install github.com/google/go-licenses@latest
 
       - name: Check Go licenses
-        working-directory: ./tui-prototype
         run: |
           go-licenses report ./... > licenses-report.txt
           echo "## Go Dependencies Licenses" >> $GITHUB_STEP_SUMMARY
@@ -143,5 +139,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: license-report
-          path: tui-prototype/licenses-report.txt
+          path: licenses-report.txt
           retention-days: 30

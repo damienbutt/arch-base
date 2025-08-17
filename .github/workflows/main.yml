@@ -23,7 +23,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.21"
-          cache-dependency-path: tui-prototype/go.sum
+          cache-dependency-path: go.sum
 
       - name: Cache Go modules
         uses: actions/cache@v4
@@ -31,7 +31,7 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('tui-prototype/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
@@ -43,57 +43,47 @@ jobs:
           go install golang.org/x/vuln/cmd/govulncheck@latest
 
       - name: Download Go dependencies
-        working-directory: ./tui-prototype
         run: go mod download
 
       - name: Verify Go dependencies
-        working-directory: ./tui-prototype
         run: go mod verify
 
       - name: Run go vet
-        working-directory: ./tui-prototype
         run: go vet ./...
 
       - name: Run staticcheck
-        working-directory: ./tui-prototype
         run: staticcheck ./...
 
       - name: Run golangci-lint
-        working-directory: ./tui-prototype
         run: golangci-lint run --verbose
 
       - name: Run security scan
-        working-directory: ./tui-prototype
         run: gosec ./...
 
       - name: Run vulnerability check
-        working-directory: ./tui-prototype
         run: govulncheck ./...
 
       - name: Run tests with coverage
-        working-directory: ./tui-prototype
         run: go test -v -race -coverprofile=coverage.out ./...
 
       - name: Generate coverage report
-        working-directory: ./tui-prototype
         run: go tool cover -html=coverage.out -o coverage.html
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          file: ./tui-prototype/coverage.out
+          file: ./coverage.out
           flags: go-tests
           name: go-coverage
 
       - name: Run benchmarks
-        working-directory: ./tui-prototype
         run: go test -bench=. -benchmem ./...
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: tui-prototype/coverage.html
+          path: coverage.html
           retention-days: 30
 
   # Build Job
@@ -119,13 +109,13 @@ jobs:
           install-only: true
 
       - name: Build snapshot (non-tag pushes)
-        if: "!startsWith(github.ref, 'refs/tags/v')"
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         run: goreleaser build --snapshot --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload build artifacts
-        if: "!startsWith(github.ref, 'refs/tags/v')"
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/upload-artifact@v4
         with:
           name: go-binaries
@@ -149,18 +139,17 @@ jobs:
           go-version: "1.21"
 
       - name: Download artifacts
-        if: "!startsWith(github.ref, 'refs/tags/v')"
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/download-artifact@v4
         with:
           name: go-binaries
           path: dist/
 
       - name: Make binaries executable
-        if: "!startsWith(github.ref, 'refs/tags/v')"
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         run: find dist -type f -name "arch-installer*" -exec chmod +x {} \;
 
       - name: Run integration tests
-        working-directory: ./tui-prototype
         run: go test -v -tags=integration ./...
 
       - name: Test Makefile targets
