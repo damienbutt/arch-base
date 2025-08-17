@@ -611,8 +611,8 @@ SWAPFILE_SIZE_MB="%s"
 
 # Package Configuration
 INSTALL_MODE="%s"
-INSTALL_OPTIONAL_PACKAGES="%t"
-INSTALL_SECURITY_PACKAGES="%t"
+DESKTOP_ENV="%s"
+AUDIO_SYSTEM="%s"
 ESSENTIAL_PACKAGES="%s"
 
 # Installation Behaviour

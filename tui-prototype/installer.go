@@ -655,12 +655,12 @@ func (e *InstallerEngine) createSwapFile() error {
 			return fmt.Errorf("failed to set swap file attributes: %v", err)
 		}
 
-		if err := e.archChroot("dd", "if=/dev/zero", "of=/swap/swapfile", fmt.Sprintf("bs=1M", "count=%d", swapSize)); err != nil {
+		if err := e.archChroot("dd", "if=/dev/zero", "of=/swap/swapfile", fmt.Sprintf("bs=1M count=%d", swapSize)); err != nil {
 			return fmt.Errorf("failed to allocate swap file: %v", err)
 		}
 	} else {
 		// Standard swap file creation
-		if err := e.archChroot("dd", "if=/dev/zero", "of=/swapfile", fmt.Sprintf("bs=1M", "count=%d", swapSize)); err != nil {
+		if err := e.archChroot("dd", "if=/dev/zero", "of=/swapfile", fmt.Sprintf("bs=1M count=%d", swapSize)); err != nil {
 			return fmt.Errorf("failed to create swap file: %v", err)
 		}
 	}
