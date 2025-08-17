@@ -16,64 +16,111 @@ type Screen int
 const (
 	welcomeScreen Screen = iota
 	systemScreen
-	userScreen
+	networkScreen
+	mirrorScreen
 	diskScreen
-	packageScreen
+	userScreen
+	bootloaderScreen
+	profileScreen
 	summaryScreen
 	installScreen
 )
 
 type Model struct {
-	width     int
-	height    int
-	screen    Screen
-	quitting  bool
-	config    *Config
-	welcome   *WelcomeModel
-	system    *SystemModel
-	user      *UserModel
-	disk      *DiskModel
-	packages  *PackageModel
-	summary   *SummaryModel
-	install   *InstallModel
-	installer *InstallerEngine
+	width      int
+	height     int
+	screen     Screen
+	quitting   bool
+	config     *Config
+	welcome    *WelcomeModel
+	system     *SystemModel
+	network    *NetworkModel
+	mirror     *MirrorModel
+	disk       *DiskModel
+	user       *UserModel
+	bootloader *BootloaderModel
+	profile    *ProfileModel
+	summary    *SummaryModel
+	install    *InstallModel
+	installer  *InstallerEngine
 }
 
-// Configuration structure that matches your bash scripts
+// Configuration structure that matches archinstall functionality
 type Config struct {
 	// System configuration
-	Hostname string
-	Timezone string
-	Locale   string
-	Keymap   string
+	Hostname   string
+	Timezone   string
+	Locale     string
+	Keymap     string
+	Region     string
+	NTPEnabled bool
+
+	// Boot configuration
+	BootMode      string // "uefi" or "bios"
+	Bootloader    string // "grub", "systemd-boot", "refind"
+	ESPMountpoint string // ESP mount point for UEFI
 
 	// User configuration
 	Username     string
 	UserGroups   []string
 	UserPassword string
+	RootPassword string
+	EnableSudo   bool
 
 	// Disk configuration
-	TargetDisk    string
-	EFISize       string
-	CryptrootName string
-	FSType        string
-	BtrfsLayout   string
-	CompressType  string
-	SwapEnabled   bool
-	SwapSize      string
-	LuksType      string
+	TargetDisk      string
+	PartitionScheme string // "auto", "manual"
+	EFISize         string
+	RootSize        string
+	HomeSize        string
+	SwapSize        string
+	CryptrootName   string
+	FSType          string // "ext4", "btrfs", "xfs"
+	BtrfsLayout     string
+	CompressType    string
+	SwapEnabled     bool
+	LuksEnabled     bool
+	LuksType        string
+
+	// Network configuration
+	NetworkConfig    string // "dhcp", "static", "none"
+	StaticIP         string
+	Gateway          string
+	DNS              []string
+	EnableNetworkMgr bool
+
+	// Mirrors and repositories
+	MirrorRegion      string
+	CustomMirrors     []string
+	TestMirrors       bool
+	ParallelDownloads int
 
 	// Package configuration
-	InstallMode       string
-	Packages          []string
-	OptionalPackages  bool
-	SecurityPackages  bool
-	EssentialPackages string
+	Profile    string // "desktop", "minimal", "server"
+	DesktopEnv string // "gnome", "kde", "xfce", etc.
+	Packages   []string
+	AURHelper  string // "yay", "paru", "none"
+	Microcode  string // "intel", "amd", "none"
 
-	// Installation behaviour
-	AutoReboot  bool
-	SkipNonFree bool
-	DryRun      bool
+	// Audio configuration
+	AudioSystem   string // "pulseaudio", "pipewire", "alsa"
+	AudioPackages []string
+
+	// Services configuration
+	EnabledServices  []string
+	DisabledServices []string
+
+	// Security configuration
+	FirewallEnabled bool
+	SELinuxEnabled  bool
+	FailBanEnabled  bool
+
+	// Installation behavior
+	AutoReboot        bool
+	SkipNonFree       bool
+	DryRun            bool
+	VerboseLogging    bool
+	PostInstallScript string
 }
 
 // Color scheme
@@ -135,23 +182,33 @@ func initialModel() Model {
 		SwapEnabled:       true,
 		SwapSize:          "2048",
 		LuksType:          "luks2",
-		InstallMode:       "standard",
-		OptionalPackages:  true,
-		SecurityPackages:  true,
-		EssentialPackages: "base base-devel linux linux-firmware",
+		Profile:           "desktop",
+		DesktopEnv:        "gnome",
+		AudioSystem:       "pipewire",
+		Microcode:         "intel",
+		BootMode:          "uefi",
+		Bootloader:        "grub",
+		NetworkConfig:     "dhcp",
+		EnableNetworkMgr:  true,
+		NTPEnabled:        true,
+		ParallelDownloads: 5,
 		UserGroups:        []string{"wheel", "audio", "video", "storage"},
 	}
 
 	return Model{
-		screen:   welcomeScreen,
-		config:   config,
-		welcome:  NewWelcomeModel(),
-		system:   NewSystemModel(config),
-		user:     NewUserModel(config),
-		disk:     NewDiskModel(config),
-		packages: NewPackageModel(config),
-		summary:  NewSummaryModel(config),
-		install:  NewInstallModel(config),
+		screen:     welcomeScreen,
+		config:     config,
+		welcome:    NewWelcomeModel(),
+		system:     NewSystemModel(config),
+		network:    NewNetworkModel(config),
+		mirror:     NewMirrorModel(config),
+		disk:       NewDiskModel(config),
+		user:       NewUserModel(config),
+		bootloader: NewBootloaderModel(config),
+		profile:    NewProfileModel(config),
+		summary:    NewSummaryModel(config),
+		install:    NewInstallModel(config),
+		installer:  NewInstallerEngine(config),
 	}
 }
 
@@ -170,14 +227,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.welcome.height = msg.Height
 		m.system.width = msg.Width
 		m.system.height = msg.Height
-		m.user.width = msg.Width
-		m.user.height = msg.Height
+		m.network.width = msg.Width
+		m.network.height = msg.Height
+		m.mirror.width = msg.Width
+		m.mirror.height = msg.Height
 		m.disk.width = msg.Width
 		m.disk.height = msg.Height
-		m.packages.width = msg.Width
-		m.packages.height = msg.Height
+		m.user.width = msg.Width
+		m.user.height = msg.Height
+		m.bootloader.width = msg.Width
+		m.bootloader.height = msg.Height
+		m.profile.width = msg.Width
+		m.profile.height = msg.Height
 		m.summary.width = msg.Width
 		m.summary.height = msg.Height
+		m.install.width = msg.Width
+		m.install.height = msg.Height
 
 		return m, nil
 
@@ -226,20 +291,32 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmd = newCmd
 
 		if m.system.shouldProceed {
-			m.screen = userScreen
+			m.screen = networkScreen
 			m.system.shouldProceed = false
 		}
 
-	case userScreen:
-		newModel, newCmd := m.user.Update(msg)
-		if user, ok := newModel.(*UserModel); ok {
-			m.user = user
+	case networkScreen:
+		newModel, newCmd := m.network.Update(msg)
+		if network, ok := newModel.(*NetworkModel); ok {
+			m.network = network
 		}
 		cmd = newCmd
 
-		if m.user.shouldProceed {
+		if m.network.shouldProceed {
+			m.screen = mirrorScreen
+			m.network.shouldProceed = false
+		}
+
+	case mirrorScreen:
+		newModel, newCmd := m.mirror.Update(msg)
+		if mirror, ok := newModel.(*MirrorModel); ok {
+			m.mirror = mirror
+		}
+		cmd = newCmd
+
+		if m.mirror.shouldProceed {
 			m.screen = diskScreen
-			m.user.shouldProceed = false
+			m.mirror.shouldProceed = false
 		}
 
 	case diskScreen:
@@ -250,20 +327,44 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmd = newCmd
 
 		if m.disk.shouldProceed {
-			m.screen = packageScreen
+			m.screen = userScreen
 			m.disk.shouldProceed = false
 		}
 
-	case packageScreen:
-		newModel, newCmd := m.packages.Update(msg)
-		if pkg, ok := newModel.(*PackageModel); ok {
-			m.packages = pkg
+	case userScreen:
+		newModel, newCmd := m.user.Update(msg)
+		if user, ok := newModel.(*UserModel); ok {
+			m.user = user
 		}
 		cmd = newCmd
 
-		if m.packages.shouldProceed {
+		if m.user.shouldProceed {
+			m.screen = bootloaderScreen
+			m.user.shouldProceed = false
+		}
+
+	case bootloaderScreen:
+		newModel, newCmd := m.bootloader.Update(msg)
+		if bootloader, ok := newModel.(*BootloaderModel); ok {
+			m.bootloader = bootloader
+		}
+		cmd = newCmd
+
+		if m.bootloader.shouldProceed {
+			m.screen = profileScreen
+			m.bootloader.shouldProceed = false
+		}
+
+	case profileScreen:
+		newModel, newCmd := m.profile.Update(msg)
+		if profile, ok := newModel.(*ProfileModel); ok {
+			m.profile = profile
+		}
+		cmd = newCmd
+
+		if m.profile.shouldProceed {
 			m.screen = summaryScreen
-			m.packages.shouldProceed = false
+			m.profile.shouldProceed = false
 		}
 
 	case summaryScreen:
@@ -355,12 +456,18 @@ func (m Model) View() string {
 		content = m.welcome.View()
 	case systemScreen:
 		content = m.system.View()
-	case userScreen:
-		content = m.user.View()
+	case networkScreen:
+		content = m.network.View()
+	case mirrorScreen:
+		content = m.mirror.View()
 	case diskScreen:
 		content = m.disk.View()
-	case packageScreen:
-		content = m.packages.View()
+	case userScreen:
+		content = m.user.View()
+	case bootloaderScreen:
+		content = m.bootloader.View()
+	case profileScreen:
+		content = m.profile.View()
 	case summaryScreen:
 		content = m.summary.View()
 	case installScreen:
@@ -529,10 +636,10 @@ DRY_RUN="%t"
 			m.config.CompressType,
 			m.config.SwapEnabled,
 			m.config.SwapSize,
-			m.config.InstallMode,
-			m.config.OptionalPackages,
-			m.config.SecurityPackages,
-			m.config.EssentialPackages,
+			m.config.Profile,
+			m.config.DesktopEnv,
+			m.config.AudioSystem,
+			strings.Join(m.config.Packages, " "),
 			m.config.AutoReboot,
 			m.config.SkipNonFree,
 			m.config.DryRun,
@@ -551,7 +658,7 @@ DRY_RUN="%t"
 			fmt.Printf("  • Hostname: %s\n", m.config.Hostname)
 			fmt.Printf("  • User: %s\n", m.config.Username)
 			fmt.Printf("  • Disk: %s (%s)\n", m.config.TargetDisk, m.config.FSType)
-			fmt.Printf("  • Packages: %s mode\n", m.config.InstallMode)
+			fmt.Printf("  • Packages: %s profile with %s\n", m.config.Profile, m.config.DesktopEnv)
 		}
 
 		return nil

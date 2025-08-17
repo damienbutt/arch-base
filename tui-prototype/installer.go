@@ -384,14 +384,14 @@ func (e *InstallerEngine) installBaseSystem() error {
 	}
 
 	// Install essential packages
-	packages := strings.Fields(e.config.EssentialPackages)
 	basePackages := []string{
 		"base", "base-devel", "linux", "linux-firmware",
 		"grub", "efibootmgr", "cryptsetup", "btrfs-progs",
 		"networkmanager", "sudo", "vim", "git",
 	}
 
-	allPackages := append(basePackages, packages...)
+	// Add user-selected packages
+	allPackages := append(basePackages, e.config.Packages...)
 	args := append([]string{"-S", "--noconfirm"}, allPackages...)
 
 	e.logger.Info("Installing packages with pacstrap...")
@@ -621,7 +621,7 @@ func (e *InstallerEngine) postInstallation() error {
 	}
 
 	// Install AUR helper if requested
-	if e.config.InstallMode != "minimal" {
+	if e.config.Profile != "minimal" && e.config.AURHelper != "none" {
 		if err := e.installAURHelper(); err != nil {
 			e.logger.Warning(fmt.Sprintf("Failed to install AUR helper: %v", err))
 		}

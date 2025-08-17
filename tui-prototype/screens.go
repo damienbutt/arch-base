@@ -759,11 +759,11 @@ func (m PackageModel) View() string {
 		titleStyle.Render("📦 Package Configuration"),
 		"Package selection and installation mode configuration.",
 		"",
-		fmt.Sprintf("Install Mode: %s", m.config.InstallMode),
-		fmt.Sprintf("Optional Packages: %t", m.config.OptionalPackages),
-		fmt.Sprintf("Security Packages: %t", m.config.SecurityPackages),
+		fmt.Sprintf("Profile: %s", m.config.Profile),
+		fmt.Sprintf("Desktop Environment: %s", m.config.DesktopEnv),
+		fmt.Sprintf("Audio System: %s", m.config.AudioSystem),
 		"",
-		"[Full package selection interface would be implemented here]",
+		"[This is a legacy screen - use ProfileModel instead]",
 		"",
 		lipgloss.NewStyle().
 			Foreground(successColor).
@@ -862,8 +862,11 @@ func (m SummaryModel) View() string {
 		"",
 		lipgloss.NewStyle().Bold(true).Render("Package Configuration:"),
 		lipgloss.JoinHorizontal(lipgloss.Left,
-			labelStyle.Render("Install Mode:"),
-			valueStyle.Render(m.config.InstallMode)),
+			labelStyle.Render("Profile:"),
+			valueStyle.Render(m.config.Profile)),
+		lipgloss.JoinHorizontal(lipgloss.Left,
+			labelStyle.Render("Desktop Environment:"),
+			valueStyle.Render(m.config.DesktopEnv)),
 		"",
 		lipgloss.NewStyle().
 			Foreground(warningColor).
@@ -1147,3 +1150,599 @@ type installCompleteMsg struct {
 	err error
 }
 type installErrorMsg string
+
+// NetworkModel handles network configuration
+type NetworkModel struct {
+	width         int
+	height        int
+	config        *Config
+	shouldProceed bool
+	focused       int
+	networkType   int // 0: DHCP, 1: Static, 2: None
+	staticIP      textinput.Model
+	gateway       textinput.Model
+	dns           textinput.Model
+	enableNetMgr  bool
+	errors        []string
+}
+
+func NewNetworkModel(config *Config) *NetworkModel {
+	staticIP := textinput.New()
+	staticIP.Placeholder = "192.168.1.100/24"
+	staticIP.SetValue(config.StaticIP)
+	staticIP.Width = 20
+
+	gateway := textinput.New()
+	gateway.Placeholder = "192.168.1.1"
+	gateway.SetValue(config.Gateway)
+	gateway.Width = 15
+
+	dns := textinput.New()
+	dns.Placeholder = "8.8.8.8,1.1.1.1"
+	dns.SetValue(strings.Join(config.DNS, ","))
+	dns.Width = 25
+
+	networkType := 0
+	if config.NetworkConfig == "static" {
+		networkType = 1
+	} else if config.NetworkConfig == "none" {
+		networkType = 2
+	}
+
+	return &NetworkModel{
+		config:       config,
+		networkType:  networkType,
+		staticIP:     staticIP,
+		gateway:      gateway,
+		dns:          dns,
+		enableNetMgr: config.EnableNetworkMgr,
+		focused:      0,
+	}
+}
+
+func (m NetworkModel) Init() tea.Cmd { return textinput.Blink }
+
+func (m *NetworkModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "enter":
+			if m.validateAndSave() {
+				m.shouldProceed = true
+			}
+		case "tab", "down":
+			m.nextField()
+		case "shift+tab", "up":
+			m.prevField()
+		case " ":
+			if m.focused == 0 {
+				m.networkType = (m.networkType + 1) % 3
+			} else if m.focused == 4 {
+				m.enableNetMgr = !m.enableNetMgr
+			}
+		}
+	}
+
+	// Update active input field
+	if m.networkType == 1 { // Static
+		switch m.focused {
+		case 1:
+			m.staticIP, cmd = m.staticIP.Update(msg)
+		case 2:
+			m.gateway, cmd = m.gateway.Update(msg)
+		case 3:
+			m.dns, cmd = m.dns.Update(msg)
+		}
+	}
+
+	return m, cmd
+}
+
+func (m *NetworkModel) nextField() {
+	maxField := 4
+	if m.networkType != 1 { // Not static
+		maxField = 1
+	}
+	if m.focused < maxField {
+		m.focused++
+	}
+	m.updateFocus()
+}
+
+func (m *NetworkModel) prevField() {
+	if m.focused > 0 {
+		m.focused--
+	}
+	m.updateFocus()
+}
+
+func (m *NetworkModel) updateFocus() {
+	m.staticIP.Blur()
+	m.gateway.Blur()
+	m.dns.Blur()
+
+	if m.networkType == 1 {
+		switch m.focused {
+		case 1:
+			m.staticIP.Focus()
+		case 2:
+			m.gateway.Focus()
+		case 3:
+			m.dns.Focus()
+		}
+	}
+}
+
+func (m *NetworkModel) validateAndSave() bool {
+	networkTypes := []string{"dhcp", "static", "none"}
+	m.config.NetworkConfig = networkTypes[m.networkType]
+	m.config.EnableNetworkMgr = m.enableNetMgr
+
+	if m.networkType == 1 { // Static
+		m.config.StaticIP = m.staticIP.Value()
+		m.config.Gateway = m.gateway.Value()
+		m.config.DNS = strings.Split(m.dns.Value(), ",")
+	}
+
+	return true
+}
+
+func (m NetworkModel) View() string {
+	title := titleStyle.Render("🌐 Network Configuration")
+
+	networkTypes := []string{"DHCP (automatic)", "Static IP", "No network"}
+	var networkOptions []string
+	for i, option := range networkTypes {
+		marker := "○"
+		if i == m.networkType {
+			marker = "●"
+		}
+		networkOptions = append(networkOptions, fmt.Sprintf("%s %s", marker, option))
+	}
+
+	content := []string{
+		title,
+		"Configure network settings for the installed system.",
+		"",
+		"Network Configuration:",
+	}
+	content = append(content, networkOptions...)
+
+	if m.networkType == 1 { // Static
+		content = append(content, []string{
+			"",
+			"Static IP Settings:",
+			fmt.Sprintf("IP Address: %s", m.staticIP.View()),
+			fmt.Sprintf("Gateway: %s", m.gateway.View()),
+			fmt.Sprintf("DNS Servers: %s", m.dns.View()),
+		}...)
+	}
+
+	content = append(content, []string{
+		"",
+		fmt.Sprintf("☐ Enable NetworkManager: %t", m.enableNetMgr),
+		"",
+		"Use arrows to navigate, Space to toggle, Enter to continue",
+	}...)
+
+	containerStyle := lipgloss.NewStyle().
+		Width(m.width - 4).
+		Height(m.height - 8).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(primaryColor).
+		Padding(2).
+		Margin(1)
+
+	return containerStyle.Render(lipgloss.JoinVertical(lipgloss.Left, content...))
+}
+
+// MirrorModel handles mirror selection and configuration
+type MirrorModel struct {
+	width             int
+	height            int
+	config            *Config
+	shouldProceed     bool
+	focused           int
+	regions           []string
+	selectedRegion    int
+	testMirrors       bool
+	parallelDownloads textinput.Model
+	errors            []string
+}
+
+func NewMirrorModel(config *Config) *MirrorModel {
+	regions := []string{"Worldwide", "United States", "Germany", "United Kingdom", "France", "Canada", "Australia", "Japan", "China"}
+
+	parallelDownloads := textinput.New()
+	parallelDownloads.Placeholder = "5"
+	parallelDownloads.SetValue(fmt.Sprintf("%d", config.ParallelDownloads))
+	parallelDownloads.Width = 5
+
+	return &MirrorModel{
+		config:            config,
+		regions:           regions,
+		selectedRegion:    0,
+		testMirrors:       config.TestMirrors,
+		parallelDownloads: parallelDownloads,
+		focused:           0,
+	}
+}
+
+func (m MirrorModel) Init() tea.Cmd { return textinput.Blink }
+
+func (m *MirrorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "enter":
+			if m.validateAndSave() {
+				m.shouldProceed = true
+			}
+		case "tab", "down":
+			m.focused = (m.focused + 1) % 3
+			m.updateFocus()
+		case "shift+tab", "up":
+			m.focused = (m.focused - 1 + 3) % 3
+			m.updateFocus()
+		case " ":
+			if m.focused == 0 {
+				m.selectedRegion = (m.selectedRegion + 1) % len(m.regions)
+			} else if m.focused == 1 {
+				m.testMirrors = !m.testMirrors
+			}
+		}
+	}
+
+	if m.focused == 2 {
+		m.parallelDownloads, cmd = m.parallelDownloads.Update(msg)
+	}
+
+	return m, cmd
+}
+
+func (m *MirrorModel) updateFocus() {
+	m.parallelDownloads.Blur()
+	if m.focused == 2 {
+		m.parallelDownloads.Focus()
+	}
+}
+
+func (m *MirrorModel) validateAndSave() bool {
+	m.config.MirrorRegion = m.regions[m.selectedRegion]
+	m.config.TestMirrors = m.testMirrors
+
+	if downloads, err := strconv.Atoi(m.parallelDownloads.Value()); err == nil {
+		m.config.ParallelDownloads = downloads
+	}
+
+	return true
+}
+
+func (m MirrorModel) View() string {
+	title := titleStyle.Render("🪞 Mirror Configuration")
+
+	content := []string{
+		title,
+		"Configure package mirrors and download settings.",
+		"",
+		fmt.Sprintf("Region: %s", m.regions[m.selectedRegion]),
+		fmt.Sprintf("Test mirrors: %t", m.testMirrors),
+		fmt.Sprintf("Parallel downloads: %s", m.parallelDownloads.View()),
+		"",
+		"Use arrows to navigate, Space to change, Enter to continue",
+	}
+
+	containerStyle := lipgloss.NewStyle().
+		Width(m.width - 4).
+		Height(m.height - 8).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(primaryColor).
+		Padding(2).
+		Margin(1)
+
+	return containerStyle.Render(lipgloss.JoinVertical(lipgloss.Left, content...))
+}
+
+// BootloaderModel handles bootloader configuration
+type BootloaderModel struct {
+	width         int
+	height        int
+	config        *Config
+	shouldProceed bool
+	focused       int
+	bootloader    int // 0: GRUB, 1: systemd-boot, 2: rEFInd
+	espMountpoint textinput.Model
+	errors        []string
+}
+
+func NewBootloaderModel(config *Config) *BootloaderModel {
+	espMountpoint := textinput.New()
+	espMountpoint.Placeholder = "/boot/efi"
+	espMountpoint.SetValue(config.ESPMountpoint)
+	espMountpoint.Width = 20
+
+	bootloader := 0
+	if config.Bootloader == "systemd-boot" {
+		bootloader = 1
+	} else if config.Bootloader == "refind" {
+		bootloader = 2
+	}
+
+	return &BootloaderModel{
+		config:        config,
+		bootloader:    bootloader,
+		espMountpoint: espMountpoint,
+		focused:       0,
+	}
+}
+
+func (m BootloaderModel) Init() tea.Cmd { return textinput.Blink }
+
+func (m *BootloaderModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "enter":
+			if m.validateAndSave() {
+				m.shouldProceed = true
+			}
+		case "tab", "down":
+			m.focused = (m.focused + 1) % 2
+			m.updateFocus()
+		case "shift+tab", "up":
+			m.focused = (m.focused - 1 + 2) % 2
+			m.updateFocus()
+		case " ":
+			if m.focused == 0 {
+				m.bootloader = (m.bootloader + 1) % 3
+			}
+		}
+	}
+
+	if m.focused == 1 {
+		m.espMountpoint, cmd = m.espMountpoint.Update(msg)
+	}
+
+	return m, cmd
+}
+
+func (m *BootloaderModel) updateFocus() {
+	m.espMountpoint.Blur()
+	if m.focused == 1 {
+		m.espMountpoint.Focus()
+	}
+}
+
+func (m *BootloaderModel) validateAndSave() bool {
+	bootloaders := []string{"grub", "systemd-boot", "refind"}
+	m.config.Bootloader = bootloaders[m.bootloader]
+	m.config.ESPMountpoint = m.espMountpoint.Value()
+	return true
+}
+
+func (m BootloaderModel) View() string {
+	title := titleStyle.Render("🥾 Bootloader Configuration")
+
+	bootloaders := []string{"GRUB (recommended)", "systemd-boot (UEFI only)", "rEFInd (advanced)"}
+	var bootloaderOptions []string
+	for i, option := range bootloaders {
+		marker := "○"
+		if i == m.bootloader {
+			marker = "●"
+		}
+		bootloaderOptions = append(bootloaderOptions, fmt.Sprintf("%s %s", marker, option))
+	}
+
+	content := []string{
+		title,
+		"Configure the system bootloader.",
+		"",
+		"Bootloader:",
+	}
+	content = append(content, bootloaderOptions...)
+	content = append(content, []string{
+		"",
+		fmt.Sprintf("ESP Mountpoint: %s", m.espMountpoint.View()),
+		"",
+		"Use arrows to navigate, Space to change, Enter to continue",
+	}...)
+
+	containerStyle := lipgloss.NewStyle().
+		Width(m.width - 4).
+		Height(m.height - 8).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(primaryColor).
+		Padding(2).
+		Margin(1)
+
+	return containerStyle.Render(lipgloss.JoinVertical(lipgloss.Left, content...))
+}
+
+// ProfileModel handles installation profile selection (replaces simple PackageModel)
+type ProfileModel struct {
+	width         int
+	height        int
+	config        *Config
+	shouldProceed bool
+	focused       int
+	profile       int // 0: Desktop, 1: Server, 2: Minimal
+	desktopEnv    int // 0: GNOME, 1: KDE, 2: XFCE, 3: i3, etc.
+	audioSystem   int // 0: PipeWire, 1: PulseAudio, 2: ALSA
+	microcode     int // 0: Intel, 1: AMD, 2: None
+	aurHelper     int // 0: yay, 1: paru, 2: none
+	errors        []string
+}
+
+func NewProfileModel(config *Config) *ProfileModel {
+	profile := 0
+	if config.Profile == "server" {
+		profile = 1
+	} else if config.Profile == "minimal" {
+		profile = 2
+	}
+
+	desktopEnv := 0
+	if config.DesktopEnv == "kde" {
+		desktopEnv = 1
+	} else if config.DesktopEnv == "xfce" {
+		desktopEnv = 2
+	} else if config.DesktopEnv == "i3" {
+		desktopEnv = 3
+	}
+
+	audioSystem := 0
+	if config.AudioSystem == "pulseaudio" {
+		audioSystem = 1
+	} else if config.AudioSystem == "alsa" {
+		audioSystem = 2
+	}
+
+	microcode := 0
+	if config.Microcode == "amd" {
+		microcode = 1
+	} else if config.Microcode == "none" {
+		microcode = 2
+	}
+
+	aurHelper := 0
+	if config.AURHelper == "paru" {
+		aurHelper = 1
+	} else if config.AURHelper == "none" {
+		aurHelper = 2
+	}
+
+	return &ProfileModel{
+		config:      config,
+		profile:     profile,
+		desktopEnv:  desktopEnv,
+		audioSystem: audioSystem,
+		microcode:   microcode,
+		aurHelper:   aurHelper,
+		focused:     0,
+	}
+}
+
+func (m ProfileModel) Init() tea.Cmd { return nil }
+
+func (m *ProfileModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "enter":
+			if m.validateAndSave() {
+				m.shouldProceed = true
+			}
+		case "tab", "down":
+			maxField := 4
+			if m.profile != 0 { // Not desktop
+				maxField = 2 // Skip desktop env and audio
+			}
+			m.focused = (m.focused + 1) % (maxField + 1)
+		case "shift+tab", "up":
+			maxField := 4
+			if m.profile != 0 {
+				maxField = 2
+			}
+			m.focused = (m.focused - 1 + maxField + 1) % (maxField + 1)
+		case " ":
+			switch m.focused {
+			case 0:
+				m.profile = (m.profile + 1) % 3
+			case 1:
+				if m.profile == 0 {
+					m.desktopEnv = (m.desktopEnv + 1) % 4
+				}
+			case 2:
+				if m.profile == 0 {
+					m.audioSystem = (m.audioSystem + 1) % 3
+				}
+			case 3:
+				m.microcode = (m.microcode + 1) % 3
+			case 4:
+				m.aurHelper = (m.aurHelper + 1) % 3
+			}
+		}
+	}
+	return m, nil
+}
+
+func (m *ProfileModel) validateAndSave() bool {
+	profiles := []string{"desktop", "server", "minimal"}
+	m.config.Profile = profiles[m.profile]
+
+	if m.profile == 0 { // Desktop
+		desktopEnvs := []string{"gnome", "kde", "xfce", "i3"}
+		m.config.DesktopEnv = desktopEnvs[m.desktopEnv]
+
+		audioSystems := []string{"pipewire", "pulseaudio", "alsa"}
+		m.config.AudioSystem = audioSystems[m.audioSystem]
+	}
+
+	microcodes := []string{"intel", "amd", "none"}
+	m.config.Microcode = microcodes[m.microcode]
+
+	aurHelpers := []string{"yay", "paru", "none"}
+	m.config.AURHelper = aurHelpers[m.aurHelper]
+
+	return true
+}
+
+func (m ProfileModel) View() string {
+	title := titleStyle.Render("📦 Installation Profile")
+
+	profiles := []string{"Desktop (full GUI)", "Server (no GUI)", "Minimal (base only)"}
+	var profileOptions []string
+	for i, option := range profiles {
+		marker := "○"
+		if i == m.profile {
+			marker = "●"
+		}
+		profileOptions = append(profileOptions, fmt.Sprintf("%s %s", marker, option))
+	}
+
+	content := []string{
+		title,
+		"Select installation profile and software packages.",
+		"",
+		"Installation Profile:",
+	}
+	content = append(content, profileOptions...)
+
+	if m.profile == 0 { // Desktop
+		desktopEnvs := []string{"GNOME", "KDE Plasma", "XFCE", "i3wm"}
+		audioSystems := []string{"PipeWire", "PulseAudio", "ALSA only"}
+
+		content = append(content, []string{
+			"",
+			fmt.Sprintf("Desktop Environment: %s", desktopEnvs[m.desktopEnv]),
+			fmt.Sprintf("Audio System: %s", audioSystems[m.audioSystem]),
+		}...)
+	}
+
+	microcodes := []string{"Intel", "AMD", "None"}
+	aurHelpers := []string{"yay", "paru", "none"}
+
+	content = append(content, []string{
+		"",
+		fmt.Sprintf("Microcode: %s", microcodes[m.microcode]),
+		fmt.Sprintf("AUR Helper: %s", aurHelpers[m.aurHelper]),
+		"",
+		"Use arrows to navigate, Space to change, Enter to continue",
+	}...)
+
+	containerStyle := lipgloss.NewStyle().
+		Width(m.width - 4).
+		Height(m.height - 8).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(primaryColor).
+		Padding(2).
+		Margin(1)
+
+	return containerStyle.Render(lipgloss.JoinVertical(lipgloss.Left, content...))
+}
