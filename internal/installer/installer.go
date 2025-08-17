@@ -702,7 +702,7 @@ func (e *InstallerEngine) installAURHelper() error {
 	e.logger.Info("Installing Paru AUR helper...")
 
 	// This would require running as the user, so we'll create a script for first boot
-	installScript := fmt.Sprintf(`#!/bin/bash
+	installScript := `#!/bin/bash
 # Install Paru AUR helper
 cd /tmp
 git clone https://aur.archlinux.org/paru.git
@@ -710,7 +710,7 @@ cd paru
 makepkg -si --noconfirm
 cd /
 rm -rf /tmp/paru
-`)
+`
 
 	scriptPath := "/mnt/home/" + e.config.Username + "/install-paru.sh"
 	if err := os.WriteFile(scriptPath, []byte(installScript), 0755); err != nil {
