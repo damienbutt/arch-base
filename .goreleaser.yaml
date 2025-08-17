@@ -12,7 +12,7 @@ before:
 
 builds:
   - id: arch-installer
-    main: ./cmd/arch-installer
+    main: .
     binary: arch-installer
     env:
       - CGO_ENABLED=0

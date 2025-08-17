@@ -5,7 +5,7 @@
 APP_NAME := arch-installer
 GO_MODULE := github.com/damienbutt/arch-base
 BUILD_DIR := build
-SRC_DIR := cmd/arch-installer
+SRC_DIR := .
 INSTALL_DIR := /usr/local/bin
 
 # Go build settings
@@ -26,13 +26,13 @@ LDFLAGS := -ldflags "-s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT) -
 all: clean build
 
 # Create build directory
-$(BUILD_DIR):
+build-dir:
 	@echo "📁 Creating build directory..."
 	@mkdir -p $(BUILD_DIR)
 
 # Build the application
 .PHONY: build
-build: $(BUILD_DIR)
+build: build-dir
 	@echo "🔨 Building $(APP_NAME)..."
 	@\
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) \
@@ -41,7 +41,7 @@ build: $(BUILD_DIR)
 
 # Build for development (with debug info)
 .PHONY: build-dev
-build-dev: $(BUILD_DIR)
+build-dev: build-dir
 	@echo "🔨 Building $(APP_NAME) (development)..."
 	@\
 	go build -gcflags="all=-N -l" -o $(BUILD_DIR)/$(APP_NAME)-dev ./$(SRC_DIR)
@@ -49,7 +49,7 @@ build-dev: $(BUILD_DIR)
 
 # Build for multiple platforms
 .PHONY: build-all
-build-all: $(BUILD_DIR)
+build-all: build-dir
 	@echo "🔨 Building $(APP_NAME) for multiple platforms..."
 	@\
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(APP_NAME)-linux-amd64 ./$(SRC_DIR) && \
