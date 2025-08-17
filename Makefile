@@ -175,37 +175,139 @@ info:
 	@echo "   Target OS:   $(GOOS)"
 	@echo "   Target Arch: $(GOARCH)"
 
+# CI/CD targets
+.PHONY: ci
+ci: deps lint test build
+	@echo "✅ CI pipeline completed successfully"
+
+# Full CI with coverage
+.PHONY: ci-full
+ci-full: deps lint test-coverage build-all
+	@echo "✅ Full CI pipeline completed successfully"
+
+# Run tests with coverage
+.PHONY: test-coverage
+test-coverage:
+	@echo "🧪 Running tests with coverage..."
+	@cd $(SRC_DIR) && \
+	go test -v -race -coverprofile=coverage.out ./... && \
+	go tool cover -html=coverage.out -o coverage.html && \
+	go tool cover -func=coverage.out | tail -1
+	@echo "✅ Coverage report generated: $(SRC_DIR)/coverage.html"
+
+# Run tests with race detection
+.PHONY: test-race
+test-race:
+	@echo "🧪 Running tests with race detection..."
+	@cd $(SRC_DIR) && go test -v -race ./...
+
+# Run benchmarks
+.PHONY: bench
+bench:
+	@echo "⚡ Running benchmarks..."
+	@cd $(SRC_DIR) && go test -bench=. -benchmem ./...
+
+# Security scanning
+.PHONY: security
+security:
+	@echo "🔒 Running security scan..."
+	@cd $(SRC_DIR) && \
+	(command -v gosec >/dev/null && gosec ./... || echo "⚠️  gosec not found, install with: go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest")
+
+# Static analysis
+.PHONY: static-analysis
+static-analysis:
+	@echo "🔍 Running static analysis..."
+	@cd $(SRC_DIR) && \
+	go vet ./... && \
+	(command -v staticcheck >/dev/null && staticcheck ./... || echo "⚠️  staticcheck not found, install with: go install honnef.co/go/tools/cmd/staticcheck@latest")
+
+# Comprehensive linting
+.PHONY: lint-ci
+lint-ci:
+	@echo "🔍 Running comprehensive linting for CI..."
+	@cd $(SRC_DIR) && \
+	go fmt ./... && \
+	go vet ./... && \
+	(command -v golangci-lint >/dev/null && golangci-lint run --verbose || echo "⚠️  golangci-lint not found")
+
+# Verify dependencies
+.PHONY: verify
+verify:
+	@echo "🔍 Verifying dependencies..."
+	@cd $(SRC_DIR) && \
+	go mod verify && \
+	go mod tidy && \
+	git diff --exit-code go.mod go.sum || (echo "❌ go.mod or go.sum is not tidy" && exit 1)
+
+# Pre-commit hook simulation
+.PHONY: pre-commit
+pre-commit: fmt lint test
+	@echo "✅ Pre-commit checks passed"
+
+# Release preparation
+.PHONY: prepare-release
+prepare-release: verify lint-ci test-coverage security static-analysis build-all package
+	@echo "✅ Release preparation completed"
+
 # Show help
 .PHONY: help
 help:
 	@echo "🏗️  Arch-Base TUI Installer Build System"
 	@echo ""
 	@echo "Available targets:"
+	@echo ""
+	@echo "📦 Build targets:"
 	@echo "  build        Build the application for production"
 	@echo "  build-dev    Build with debug information"
 	@echo "  build-all    Build for multiple platforms"
 	@echo "  clean        Remove build artifacts"
-	@echo "  install      Install to system (requires sudo)"
-	@echo "  uninstall    Remove from system (requires sudo)"
+	@echo ""
+	@echo "🚀 Run targets:"
 	@echo "  run          Build and run the application"
 	@echo "  run-dev      Run in development mode (go run)"
+	@echo "  install      Install to system (requires sudo)"
+	@echo "  uninstall    Remove from system (requires sudo)"
+	@echo ""
+	@echo "🧪 Testing targets:"
 	@echo "  test         Run tests"
-	@echo "  lint         Run linting and formatting"
+	@echo "  test-coverage Run tests with coverage report"
+	@echo "  test-race    Run tests with race detection"
+	@echo "  bench        Run benchmarks"
+	@echo ""
+	@echo "🔍 Code quality targets:"
+	@echo "  lint         Run basic linting and formatting"
+	@echo "  lint-ci      Run comprehensive linting for CI"
 	@echo "  fmt          Format Go code"
-	@echo "  tidy         Tidy Go modules"
+	@echo "  security     Run security scan (gosec)"
+	@echo "  static-analysis Run static analysis (staticcheck)"
+	@echo ""
+	@echo "📦 Dependency targets:"
 	@echo "  deps         Download dependencies"
+	@echo "  tidy         Tidy Go modules"
+	@echo "  verify       Verify dependencies are clean"
+	@echo ""
+	@echo "🎯 CI/CD targets:"
+	@echo "  ci           Basic CI pipeline (deps + lint + test + build)"
+	@echo "  ci-full      Full CI pipeline with coverage and multi-platform builds"
+	@echo "  pre-commit   Simulate pre-commit hooks"
+	@echo "  prepare-release Complete release preparation"
+	@echo ""
+	@echo "📦 Package targets:"
 	@echo "  package      Create distribution package"
 	@echo "  release      Create release packages for all platforms"
+	@echo ""
+	@echo "ℹ️  Utility targets:"
 	@echo "  dev          Development workflow (clean + build + run)"
 	@echo "  info         Show build information"
 	@echo "  help         Show this help message"
 	@echo ""
 	@echo "Examples:"
-	@echo "  make build              # Build for production"
-	@echo "  make run               # Build and run"
-	@echo "  make dev               # Clean, build, and run"
-	@echo "  make install           # Install system-wide"
-	@echo "  make release           # Create release packages"
+	@echo "  make ci                # Run CI pipeline"
+	@echo "  make pre-commit        # Check before committing"
+	@echo "  make test-coverage     # Run tests with coverage"
+	@echo "  make prepare-release   # Prepare for release"
+	@echo "  make dev               # Quick development cycle"
 
 # Default help if no target specified
 .DEFAULT_GOAL := help

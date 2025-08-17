@@ -1,0 +1,171 @@
+name: Security & Dependencies
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - "tui-prototype/go.mod"
+      - "tui-prototype/go.sum"
+      - "package.json"
+      - "yarn.lock"
+
+jobs:
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+
+      - name: Install security tools
+        run: |
+          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Run gosec security scanner
+        working-directory: ./tui-prototype
+        run: |
+          gosec -fmt sarif -out gosec-report.sarif ./...
+        continue-on-error: true
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: tui-prototype/gosec-report.sarif
+          category: gosec
+
+      - name: Run vulnerability check
+        working-directory: ./tui-prototype
+        run: govulncheck ./...
+
+      - name: Setup Node.js for security scan
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "yarn"
+
+      - name: Install Node.js dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run npm audit
+        run: yarn audit --level moderate
+        continue-on-error: true
+
+  dependency-update:
+    name: Dependency Update Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+
+      - name: Update Go dependencies
+        working-directory: ./tui-prototype
+        run: |
+          go get -u ./...
+          go mod tidy
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "yarn"
+
+      - name: Update Node.js dependencies
+        run: |
+          yarn upgrade --latest
+          yarn install
+
+      - name: Check for changes
+        id: verify-changed-files
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "files_changed=$(git status --porcelain | wc -l)" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.verify-changed-files.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update dependencies"
+          title: "chore: automated dependency updates"
+          body: |
+            ## Automated Dependency Updates
+
+            This PR was automatically created to update project dependencies.
+
+            ### Changes
+            - 📦 Updated Go dependencies in `tui-prototype/`
+            - 📦 Updated Node.js dependencies
+
+            ### Files Changed
+            ${{ steps.verify-changed-files.outputs.files_changed }} files were modified.
+
+            ### Next Steps
+            1. Review the changes carefully
+            2. Run tests locally: `make ci-full`
+            3. Check for any breaking changes in updated packages
+            4. Merge if tests pass and no issues are found
+
+            ---
+            🤖 This PR was created automatically by the dependency update workflow.
+          branch: chore/dependency-updates
+          delete-branch: true
+          labels: |
+            dependencies
+            automated
+            chore
+
+  license-check:
+    name: License Compliance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+
+      - name: Install go-licenses
+        run: go install github.com/google/go-licenses@latest
+
+      - name: Check Go licenses
+        working-directory: ./tui-prototype
+        run: |
+          go-licenses report ./... > licenses-report.txt
+          echo "## Go Dependencies Licenses" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat licenses-report.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload license report
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: tui-prototype/licenses-report.txt
+          retention-days: 30

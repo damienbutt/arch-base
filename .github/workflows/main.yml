@@ -1,32 +1,223 @@
-name: CI
+name: CI/CD
 
-on: [push]
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master, develop]
 
 jobs:
-  publish:
-    name: Publish
-
+  # Go TUI Application CI
+  go-ci:
+    name: Go TUI CI
     runs-on: ubuntu-latest
 
-    if: ${{ github.ref == 'refs/heads/master' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+          cache-dependency-path: tui-prototype/go.sum
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('tui-prototype/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download Go dependencies
+        working-directory: ./tui-prototype
+        run: go mod download
+
+      - name: Verify Go dependencies
+        working-directory: ./tui-prototype
+        run: go mod verify
+
+      - name: Run go vet
+        working-directory: ./tui-prototype
+        run: go vet ./...
+
+      - name: Install staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: Run staticcheck
+        working-directory: ./tui-prototype
+        run: staticcheck ./...
+
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+          working-directory: ./tui-prototype
+
+      - name: Run tests
+        working-directory: ./tui-prototype
+        run: go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Generate coverage report
+        working-directory: ./tui-prototype
+        run: go tool cover -html=coverage.out -o coverage.html
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./tui-prototype/coverage.out
+          flags: go-tests
+          name: go-coverage
+
+      - name: Run benchmarks
+        working-directory: ./tui-prototype
+        run: go test -bench=. -benchmem ./...
+
+      - name: Build application
+        working-directory: ./tui-prototype
+        run: go build -v -o ../build/arch-installer .
+
+      - name: Build for multiple platforms
+        working-directory: ./tui-prototype
+        run: |
+          # Linux AMD64
+          GOOS=linux GOARCH=amd64 go build -o ../build/arch-installer-linux-amd64 .
+          # Linux ARM64
+          GOOS=linux GOARCH=arm64 go build -o ../build/arch-installer-linux-arm64 .
+          # macOS AMD64
+          GOOS=darwin GOARCH=amd64 go build -o ../build/arch-installer-darwin-amd64 .
+          # macOS ARM64
+          GOOS=darwin GOARCH=arm64 go build -o ../build/arch-installer-darwin-arm64 .
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-binaries
+          path: build/arch-installer*
+          retention-days: 30
+
+  # Node.js/Yarn CI
+  node-ci:
+    name: Node.js CI
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --network-timeout 1000000
+
+      - name: Run linting
+        run: yarn lint
+
+      - name: Run tests
+        run: yarn test
+
+      - name: Build project
+        run: yarn build
+
+  # Integration Testing
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [go-ci, node-ci]
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: go-binaries
+          path: build/
+
+      - name: Make binaries executable
+        run: chmod +x build/arch-installer*
+
+      - name: Run integration tests
+        working-directory: ./tui-prototype
+        run: go test -v -tags=integration ./...
+
+      - name: Test Makefile targets
+        run: |
+          cd tui-prototype
+          make clean
+          make build
+          make test
+          ls -la ../build/
+
+  # Release Job (only on master)
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [go-ci, node-ci, integration-test]
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
+          cache: "yarn"
 
-      - name: Install (with cache)
-        uses: bahmutov/npm-install@v1
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          install-command: yarn --frozen-lockfile --network-timeout 1000000
+          go-version: "1.21"
 
-      - name: Release
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --network-timeout 1000000
+
+      - name: Download Go artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: go-binaries
+          path: build/
+
+      - name: Package Go binaries
+        working-directory: ./tui-prototype
+        run: make package
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get version from git tag or generate one
+          VERSION=$(git describe --tags --always --dirty)
+          echo "Creating release for version: $VERSION"
+
+          # Create release with Go binaries
+          gh release create "$VERSION" \
+            --title "Arch-Base Installer $VERSION" \
+            --notes "Automated release of Arch-Base TUI Installer" \
+            --draft=false \
+            --prerelease=false \
+            build/arch-installer* \
+            build/*.tar.gz || echo "Release already exists"
+
+      - name: Semantic Release (Node.js)
         run: yarn semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
