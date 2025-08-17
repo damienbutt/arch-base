@@ -23,19 +23,8 @@ This development container provides a complete Arch Linux environment for develo
 -   **Build System**: Make with comprehensive targets
 -   **Release Management**: GoReleaser pre-installed
 -   **Git Hooks**: Lefthook for consistent commits
--   **Code Quality**: staticcheck, gosec, misspell
--   **Shell**: Zsh with Oh My Zsh and useful plugins
-
-### 🏗️ **Arch-Specific Tools**
-
-Pre-installed tools relevant to Arch Linux installation:
-
--   `arch-install-scripts` - Arch installation utilities
--   `pacman-contrib` - Pacman utilities and scripts
--   `reflector` - Mirror list management
--   Filesystem tools: `dosfstools`, `e2fsprogs`, `btrfs-progs`, `xfsprogs`
--   Partitioning: `gptfdisk`, `parted`, `lvm2`
--   Encryption: `cryptsetup`, `device-mapper`
+-   **Code Quality**: golangci-lint, govulncheck, goimports
+-   **Shell**: Bash with streamlined environment
 
 ### 🎨 **VS Code Integration**
 
@@ -62,7 +51,8 @@ Pre-installed tools relevant to Arch Linux installation:
 3. **Wait for Setup**:
 
     - Container builds and configures automatically
-    - Setup script installs all tools and dependencies
+    - Simple welcome script initializes workspace
+    - Go dependencies downloaded automatically
 
 4. **Start Developing**:
 
@@ -132,29 +122,6 @@ arch-run               # Quick alias
 -   Required for testing disk operations and low-level system calls
 -   Enables realistic testing of installer functionality
 
-## Useful Aliases
-
-The container includes helpful aliases:
-
-```bash
-# File operations
-ll, la, lt    # Enhanced ls with exa
-cat           # bat (syntax highlighting)
-grep          # ripgrep (faster)
-find          # fd (faster)
-
-# Go development
-gt, gtv, gtr, gtc    # Various go test commands
-gb, gr, gf, gl       # go build, run, fmt, lint
-
-# Make shortcuts
-mb, mt, mc, mr       # make build, test, clean, run
-mrb, mrc            # make release-build, release-check
-
-# Project specific
-arch-build, arch-test, arch-run, arch-release
-```
-
 ## Architecture Context
 
 This development environment matches the target deployment environment:
@@ -171,7 +138,16 @@ Perfect for developing and testing the Arch Linux installer in an environment th
 The container can be customized by editing:
 
 -   `.devcontainer/devcontainer.json` - Container configuration
--   `.devcontainer/setup.sh` - Post-creation setup script
+-   `.devcontainer/setup.sh` - Simple welcome and workspace initialization script
+
+The setup script now focuses on workspace initialization rather than system configuration:
+
+-   Provides development environment overview
+-   Downloads Go dependencies
+-   Installs git hooks (lefthook)
+-   Sets up proper file permissions
+
+All system packages and tools are installed during the Docker build phase for better performance.
 
 Rebuild the container after changes:
 

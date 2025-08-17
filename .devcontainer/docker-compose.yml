@@ -37,40 +37,18 @@ services:
     # Working directory
     working_dir: /workspace
 
-    # Keep container running
-    command: sleep infinity
-
-    # User configuration
-    user: vscode
+    # Keep container running (override Dockerfile CMD)
+    command: ["sleep", "infinity"]
 
     # Networks
     networks:
       - arch-dev-network
-
-  # Optional: Additional services for testing
-  test-database:
-    image: postgres:15-alpine
-    container_name: arch-base-test-db
-    environment:
-      - POSTGRES_DB=archbase_test
-      - POSTGRES_USER=test
-      - POSTGRES_PASSWORD=test
-    ports:
-      - "5432:5432"
-    volumes:
-      - test-db-data:/var/lib/postgresql/data
-    networks:
-      - arch-dev-network
-    profiles:
-      - testing
 
 volumes:
   go-mod-cache:
     name: arch-base-go-mod-cache
   vscode-server:
     name: arch-base-vscode-server
-  test-db-data:
-    name: arch-base-test-db-data
 
 networks:
   arch-dev-network:
