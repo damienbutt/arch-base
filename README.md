@@ -13,7 +13,46 @@
 
 ---
 
-A collection of bash scripts to get Arch Linux up and running with ease.
+A modern TUI (Terminal User Interface) installer for Arch Linux, built with Go and Bubble Tea.
+
+## 🚀 Quick Start
+
+### Development Container (Recommended)
+
+The fastest way to get started is using the pre-configured development container:
+
+1. **Prerequisites**: Docker and VS Code with Dev Containers extension
+2. **Open Project**: `code .`
+3. **Reopen in Container**: `Ctrl+Shift+P` → "Dev Containers: Reopen in Container"
+4. **Start Developing**: Container sets up automatically with all tools
+
+```bash
+# Inside the container
+make help          # See all available commands
+make test          # Run tests
+make build         # Build the installer
+make release-build # Build with GoReleaser
+```
+
+### Local Development
+
+For local development without containers:
+
+```bash
+# Install dependencies
+go mod download
+
+# Run tests
+make test
+
+# Build the installer
+make build
+
+# Run the application
+make run
+```
+
+## 📦 Development Environment
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->

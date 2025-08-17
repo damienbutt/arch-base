@@ -1,0 +1,78 @@
+version: "3.8"
+
+services:
+  devcontainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: arch-base-dev
+    hostname: arch-dev
+
+    # Privileged mode for system-level testing
+    privileged: true
+
+    # Environment variables
+    environment:
+      - GOOS=linux
+      - GOARCH=amd64
+      - CGO_ENABLED=0
+      - GO111MODULE=on
+      - GOPROXY=https://proxy.golang.org,direct
+      - GOSUMDB=sum.golang.org
+      - TZ=UTC
+
+    # Volume mounts
+    volumes:
+      - ../:/workspace:cached
+      - go-mod-cache:/go/pkg/mod
+      - vscode-server:/home/vscode/.vscode-server
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    # Port forwarding
+    ports:
+      - "8080:8080" # Development server
+      - "9000:9000" # Debug port
+      - "2345:2345" # Delve debugger
+
+    # Working directory
+    working_dir: /workspace
+
+    # Keep container running
+    command: sleep infinity
+
+    # User configuration
+    user: vscode
+
+    # Networks
+    networks:
+      - arch-dev-network
+
+  # Optional: Additional services for testing
+  test-database:
+    image: postgres:15-alpine
+    container_name: arch-base-test-db
+    environment:
+      - POSTGRES_DB=archbase_test
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
+    ports:
+      - "5432:5432"
+    volumes:
+      - test-db-data:/var/lib/postgresql/data
+    networks:
+      - arch-dev-network
+    profiles:
+      - testing
+
+volumes:
+  go-mod-cache:
+    name: arch-base-go-mod-cache
+  vscode-server:
+    name: arch-base-vscode-server
+  test-db-data:
+    name: arch-base-test-db-data
+
+networks:
+  arch-dev-network:
+    name: arch-dev-network
+    driver: bridge

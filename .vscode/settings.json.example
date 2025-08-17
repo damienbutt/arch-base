@@ -1,0 +1,36 @@
+{
+  "go.useLanguageServer": true,
+  "go.gopath": "/go",
+  "go.goroot": "/usr/local/go",
+  "go.toolsManagement.checkForUpdates": "local",
+  "go.lintTool": "golangci-lint",
+  "go.lintFlags": ["--fast"],
+  "go.vetOnSave": "package",
+  "go.formatTool": "goimports",
+  "go.generateTestsFlags": ["-exported"],
+  "go.testFlags": ["-v", "-race"],
+  "go.testTimeout": "30s",
+  "go.coverOnSave": true,
+  "go.coverageDecorator": {
+    "type": "gutter",
+    "coveredHighlightColor": "rgba(64,128,128,0.5)",
+    "uncoveredHighlightColor": "rgba(128,64,64,0.5)"
+  },
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true
+  },
+  "terminal.integrated.defaultProfile.linux": "zsh",
+  "makefile.configureOnOpen": true,
+  "files.associations": {
+    "Makefile": "makefile",
+    "*.mk": "makefile",
+    "lefthook.yml": "yaml",
+    ".goreleaser.yaml": "yaml"
+  },
+  "markdown.preview.linkify": true,
+  "markdown.preview.typographer": true
+}

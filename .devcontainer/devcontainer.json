@@ -1,0 +1,140 @@
+{
+    "name": "Arch Linux Installer Development",
+    "image": "archlinux:latest",
+
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": true,
+            "configureZshAsDefaultShell": true,
+            "installOhMyZsh": true,
+            "upgradePackages": true,
+            "username": "vscode",
+            "userUid": 1000,
+            "userGid": 1000
+        },
+        "ghcr.io/devcontainers/features/git:1": {
+            "ppa": true,
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/github-cli:1": {
+            "installDirectlyFromGitHubRelease": true,
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/go:1": {
+            "version": "1.21",
+            "golangciLintVersion": "latest"
+        },
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "moby": true,
+            "azureDnsAutoDetection": true,
+            "installDockerBuildx": true,
+            "version": "latest",
+            "dockerDashComposeVersion": "v2"
+        }
+    },
+
+    "runArgs": ["--privileged"],
+
+    "mounts": ["source=arch-base-go-mod-cache,target=/go/pkg/mod,type=volume"],
+
+    "remoteEnv": {
+        "GOOS": "linux",
+        "GOARCH": "amd64",
+        "CGO_ENABLED": "0",
+        "GO111MODULE": "on",
+        "GOPROXY": "https://proxy.golang.org,direct",
+        "GOSUMDB": "sum.golang.org"
+    },
+
+    "containerEnv": {
+        "TZ": "UTC"
+    },
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "golang.go",
+                "ms-vscode.makefile-tools",
+                "redhat.vscode-yaml",
+                "ms-vscode.vscode-json",
+                "GitHub.copilot",
+                "GitHub.copilot-chat",
+                "ms-vscode.remote-containers",
+                "eamodio.gitlens",
+                "ms-vscode.test-adapter-converter",
+                "hbenl.vscode-test-explorer",
+                "formulahendry.code-runner",
+                "ms-vscode.hexeditor",
+                "bradlc.vscode-tailwindcss",
+                "PKief.material-icon-theme",
+                "zxh404.vscode-proto3",
+                "ms-vscode.live-server",
+                "streetsidesoftware.code-spell-checker",
+                "davidanson.vscode-markdownlint",
+                "yzhang.markdown-all-in-one",
+                "shd101wyy.markdown-preview-enhanced",
+                "ms-vscode.remote-ssh",
+                "github.vscode-github-actions",
+                "ms-vscode.vscode-github-issue-notebooks"
+            ],
+            "settings": {
+                "go.useLanguageServer": true,
+                "go.gopath": "/go",
+                "go.goroot": "/usr/local/go",
+                "go.toolsManagement.checkForUpdates": "local",
+                "go.lintTool": "golangci-lint",
+                "go.lintFlags": ["--fast"],
+                "go.vetOnSave": "package",
+                "go.formatTool": "goimports",
+                "go.generateTestsFlags": ["-exported"],
+                "go.testFlags": ["-v", "-race"],
+                "go.testTimeout": "30s",
+                "go.coverOnSave": true,
+                "go.coverageDecorator": {
+                    "type": "gutter",
+                    "coveredHighlightColor": "rgba(64,128,128,0.5)",
+                    "uncoveredHighlightColor": "rgba(128,64,64,0.5)"
+                },
+                "files.eol": "\\n",
+                "files.insertFinalNewline": true,
+                "files.trimTrailingWhitespace": true,
+                "editor.formatOnSave": true,
+                "editor.codeActionsOnSave": {
+                    "source.organizeImports": true
+                },
+                "terminal.integrated.defaultProfile.linux": "zsh",
+                "terminal.integrated.profiles.linux": {
+                    "zsh": {
+                        "path": "/bin/zsh",
+                        "args": ["-l"]
+                    }
+                },
+                "makefile.configureOnOpen": true,
+                "files.associations": {
+                    "Makefile": "makefile",
+                    "*.mk": "makefile",
+                    "lefthook.yml": "yaml",
+                    ".goreleaser.yaml": "yaml"
+                }
+            }
+        }
+    },
+
+    "postCreateCommand": "bash .devcontainer/setup.sh",
+
+    "forwardPorts": [8080, 9000],
+
+    "portsAttributes": {
+        "8080": {
+            "label": "Development Server",
+            "protocol": "http"
+        },
+        "9000": {
+            "label": "Debug Port",
+            "protocol": "http"
+        }
+    },
+
+    "workspaceFolder": "/workspace",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+}

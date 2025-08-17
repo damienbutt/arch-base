@@ -108,3 +108,27 @@ dist
 
 # Build output
 build/
+dist/
+
+# Development container
+.devcontainer/.env
+.devcontainer/docker-compose.override.yml
+
+# VS Code
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/.ropeproject
+
+# Go specific
+vendor/
+*.test
+*.prof
+coverage.out
+coverage.html
+
+# Temporary files
+tmp/
+logs/
+*.tmp
+*.log
