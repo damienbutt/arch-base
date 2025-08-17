@@ -6,20 +6,30 @@
 
 ---
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/damienbutt/arch-base)](https://goreportcard.com/report/github.com/damienbutt/arch-base)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
-[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 [![GitHub contributors](https://img.shields.io/github/contributors/damienbutt/arch-base)](#contributors)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
 
-A modern TUI (Terminal User Interface) installer for Arch Linux, built with Go and Bubble Tea.
+A modern, interactive TUI (Terminal User Interface) installer for Arch Linux, built with Go and
+the Bubble Tea framework. This installer provides a streamlined, user-friendly experience for
+setting up Arch Linux with sensible defaults and modern filesystem configurations.
 
 ## 🚀 Quick Start
 
-### Development Container (Recommended)
+### Option 1: One-Line Installation
 
-The fastest way to get started is using the pre-configured development container:
+Boot into an Arch Linux live environment and run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/install-arch-base.sh | bash
+```
+
+### Option 2: Development Container (Recommended for Contributors)
+
+The fastest way to contribute is using the pre-configured development container:
 
 1. **Prerequisites**: Docker and VS Code with Dev Containers extension
 2. **Open Project**: `code .`
@@ -34,121 +44,207 @@ make build         # Build the installer
 make release-build # Build with GoReleaser
 ```
 
-### Local Development
+### Option 3: Local Development
 
 For local development without containers:
 
 ```bash
+# Clone and setup
+git clone https://github.com/damienbutt/arch-base.git
+cd arch-base
+
 # Install dependencies
 go mod download
 
-# Run tests
+# Install development tools (optional)
+./scripts/install-go-tools.sh
+
+# Build and test
 make test
-
-# Build the installer
 make build
-
-# Run the application
 make run
 ```
 
-## 📦 Development Environment
+## � Contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-## Contents 📖
-
--   [Features :package:](#features-package)
--   [Usage :rocket:](#usage-rocket)
--   [Team :soccer:](#team-soccer)
--   [Contributors :sparkles:](#contributors-sparkles)
--   [Learn More :books:](#learn-more-books)
--   [LICENSE :balance_scale:](#license-balance_scale)
+- [Features](#features)
+- [Installation Guide](#installation-guide)
+- [Build System](#build-system)
+- [Development](#development)
+- [Contributing](#contributing)
+- [Team](#team)
+- [Contributors](#contributors)
+- [Learn More](#learn-more)
+- [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## Features :package:
+## ✨ Features
 
--   EFI Partition (260M)
--   BTRFS Root Partition (Remaining Space)
-    -   Subvolumes
-        -   @
-        -   @home
-        -   @log
-        -   @cache
-        -   @snapshots
-        -   @swap
-    -   Automatic snapshots provided by `snapper` and `snap-pac`
--   LUKS1 Full Disk Encryption including boot directory
--   GRUB Bootloader
--   Paru AUR Helper
--   ZRAM (1GB)
--   Swapfile (System Memory + 2GB)
--   Arch NetBoot
+- **Modern TUI Interface**: Interactive terminal interface built with Bubble Tea
+- **EFI Boot Support**: 260MB EFI system partition for modern UEFI systems
+- **BTRFS Filesystem**: Advanced filesystem with subvolumes for better organization:
+  - `@` (root)
+  - `@home` (user data)
+  - `@log` (system logs)
+  - `@cache` (package cache)
+  - `@snapshots` (system snapshots)
+  - `@swap` (swap files)
+- **Full Disk Encryption**: LUKS1 encryption including boot directory
+- **Automatic Snapshots**: Configured with `snapper` and `snap-pac`
+- **GRUB Bootloader**: Reliable boot management
+- **AUR Support**: Paru AUR helper pre-installed
+- **Optimized Memory**: ZRAM (1GB) + Swapfile (System Memory + 2GB)
+- **Network Boot Ready**: Arch NetBoot support
 
-## Usage :rocket:
+## 📋 Installation Guide
 
-1. Download the latest version of the live ISO from [here](https://www.archlinux.org/download/) and boot into it.
+### Prerequisites
 
-    - If you're installing on bare metal, you'll need to burn the ISO to a USB flash drive. A great tool for this is [Etcher](https://etcher.io/). It is free and open source software.
+1. Download the [Arch Linux ISO](https://archlinux.org/download/) and boot into the live environment
+2. (Optional) Connect to WiFi if needed:
+   ```bash
+   iwctl
+   # Follow the prompts to connect to your network
+   ```
+3. Verify internet connectivity:
+   ```bash
+   ping -c 4 archlinux.org
+   ```
 
-2. (Optional) Setup WiFi.
+### Installation Steps
 
-    - If you need to connect to WiFi for network connectivity, follow the instructions [here](https://wiki.archlinux.org/title/Iwd#iwctl).
+1. **Optional SSH Setup** (recommended for copy/paste functionality):
+   ```bash
+   # Set root password
+   passwd root
+   
+   # Find IP address
+   ip a
+   
+   # SSH from another machine
+   ssh root@<ip-address>
+   ```
 
-3. Confirm internet connectivity.
+2. **Run the installer**:
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/install-arch-base.sh | bash
+   ```
 
-    ```bash
-    ping -c 4 archlinux.org
-    ```
+3. **Follow the interactive prompts** to configure your system
 
-4. (Optional) Set the root user password to allow SSH access. This is not required but recommended to allow copy/paste functionality.
+4. **Reboot** when installation completes
 
-    1. Get the IP address of the machine.
+## 🔨 Build System
 
-        ```bash
-        ip a
-        ```
+This project includes a comprehensive Makefile for development and building:
 
-    2. Set the root user password.
+### Quick Commands
 
-        ```bash
-        passwd root
-        ```
+```bash
+make build         # Build for production (Linux x64)
+make test          # Run all tests
+make run           # Build and run the application
+make dev           # Development workflow (clean + build + run)
+make lint          # Run linting and formatting
+make release-build # Build with GoReleaser
+make help          # Show all available commands
+```
 
-    3. From a remote machine SSH into the environment.
+### Development Commands
 
-        ```bash
-        ssh root@<ip>
-        ```
+```bash
+make build-dev     # Build with debug information
+make run-dev       # Run in development mode (go run)
+make fmt           # Format Go code
+make tidy          # Tidy Go modules
+make deps          # Download dependencies
+make clean         # Remove build artifacts
+```
 
-5. Run the following command:
+### Distribution Commands
 
-    ```bash
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/install-arch-base.sh)"
-    ```
+```bash
+make package       # Create distribution package
+make release       # Create release packages for all platforms
+make install       # Install system-wide (requires sudo)
+make uninstall     # Remove from system (requires sudo)
+```
 
-6. Follow prompts until the setup is complete.
+## 🛠️ Development
 
-## Team :soccer:
+### Prerequisites
 
-This project is maintained by the following person(s) and a bunch of [awesome contributors](https://github.com/damienbutt/arch-base/graphs/contributors).
+- **Go 1.21+**: [Download and install Go](https://golang.org/dl/)
+- **Git**: For version control
+- **Make**: For build automation
 
-<table>
-    <tr>
-        <td align="center">
-            <a href="https://github.com/damienbutt">
-                <img src="https://avatars.githubusercontent.com/damienbutt?v=4?s=100" width="100px;" alt=""/>
-                <br />
-                <sub><b>Damien Butt</b></sub>
-            </a>
-            <br />
-        </td>
-    </tr>
-</table>
+### Setting Up
 
-## Contributors :sparkles:
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/damienbutt/arch-base.git
+   cd arch-base
+   ```
+
+2. **Install development tools** (optional):
+   ```bash
+   ./scripts/install-go-tools.sh
+   ```
+
+3. **Install git hooks**:
+   ```bash
+   lefthook install
+   ```
+
+4. **Run initial checks**:
+   ```bash
+   make ci
+   ```
+
+### Project Structure
+
+```
+arch-base/
+├── main.go              # Application entry point
+├── main_test.go         # Main package tests
+├── internal/            # Internal packages
+│   ├── installer/       # Core installation logic
+│   ├── styles/          # TUI styling
+│   ├── system/          # System utilities
+│   ├── types/           # Type definitions
+│   └── ui/              # User interface components
+├── scripts/             # Installation and setup scripts
+├── docs/                # Additional documentation
+├── build/               # Build artifacts (generated)
+├── .devcontainer/       # Development container config
+├── Makefile            # Build system
+└── .goreleaser.yaml    # Release configuration
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Workflow
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and add tests
+4. Run tests: `make test`
+5. Run linting: `make lint`
+6. Commit using conventional commits: `git commit -m "feat: add amazing feature"`
+7. Push to your fork and submit a pull request
+
+## 👥 Team
+
+This project is maintained by [Damien Butt](https://github.com/damienbutt) and the
+[awesome contributors](https://github.com/damienbutt/arch-base/graphs/contributors).
+
+## ✨ Contributors
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 
@@ -161,11 +257,6 @@ Thanks go to these awesome people ([emoji key](https://allcontributors.org/docs/
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
-<table>
-  <tr>
-    <td align="center"><a href="https://github.com/features/security"><img src="https://avatars.githubusercontent.com/u/27347476?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Dependabot</b></sub></a><br /><a href="#maintenance-dependabot" title="Maintenance">🚧</a></td>
-  </tr>
-</table>
 
 <!-- markdownlint-restore -->
 <!-- prettier-ignore-end -->
@@ -175,12 +266,12 @@ Thanks go to these awesome people ([emoji key](https://allcontributors.org/docs/
 This project follows the [all-contributors](https://allcontributors.org) specification.
 Contributions of any kind are welcome!
 
-Check out the [contributing guide](docs/CONTRIBUTING.md) for more information.
+## 📚 Learn More
 
-## Learn More :books:
+- [Arch Linux Wiki](https://wiki.archlinux.org/) - Comprehensive Arch Linux documentation
+- [Bubble Tea](https://github.com/charmbracelet/bubbletea) - The TUI framework used
+- [BTRFS](https://wiki.archlinux.org/title/Btrfs) - Learn about the BTRFS filesystem
 
-To learn more about Arch Linux, make sure to check out the [ArchWiki](https://wiki.archlinux.org/index.php/Main_Page).
-
-## LICENSE :balance_scale:
+## 📄 License
 
 [MIT](LICENSE)
