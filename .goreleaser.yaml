@@ -1,0 +1,125 @@
+# GoReleaser configuration for arch-base
+# Documentation: https://goreleaser.com
+
+version: 2
+
+project_name: arch-installer
+
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - id: arch-installer
+    main: ./cmd/arch-installer
+    binary: arch-installer
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+archives:
+  - id: default
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else }}{{ .Arch }}{{ end }}
+    files:
+      - README.md
+      - LICENSE
+      - docs/CHANGELOG.md
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - "^style:"
+      - "^refactor:"
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: "Bug fixes"
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: "Performance improvements"
+      regexp: '^.*?perf(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: Others
+      order: 999
+
+release:
+  github:
+    owner: damienbutt
+    name: arch-base
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## Arch Base Installer {{ .Tag }}
+
+    Welcome to this new release of Arch Base Installer!
+
+    This utility is designed specifically for Arch Linux installation.
+
+  footer: |
+    ## Installation
+
+    ### Download the binary for your Linux x86_64 system:
+
+    ```bash
+    curl -L -o arch-installer.tar.gz https://github.com/damienbutt/arch-base/releases/download/{{ .Tag }}/arch-installer_Linux_x86_64.tar.gz
+    tar -xzf arch-installer.tar.gz
+    chmod +x arch-installer
+    ```
+
+    ### Verify the download:
+
+    ```bash
+    curl -L -o checksums.txt https://github.com/damienbutt/arch-base/releases/download/{{ .Tag }}/checksums.txt
+    sha256sum --check checksums.txt
+    ```
+
+    ### Run the installer:
+
+    ```bash
+    sudo ./arch-installer
+    ```
+
+    **Full Changelog**: https://github.com/damienbutt/arch-base/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+# AUR package for Arch Linux distribution
+aurs:
+  - name: arch-installer-bin
+    homepage: https://github.com/damienbutt/arch-base
+    description: "Arch Linux base installation utility with TUI interface"
+    maintainers:
+      - "Damien Butt <damien@example.com>"
+    license: MIT
+    private_key: "{{ .Env.AUR_KEY }}"
+    git_url: "ssh://aur@aur.archlinux.org/arch-installer-bin.git"
+    package: |-
+      # bin
+      install -Dm755 "./arch-installer" "${pkgdir}/usr/bin/arch-installer"
+      # license
+      install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/arch-installer/LICENSE"

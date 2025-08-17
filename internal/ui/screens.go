@@ -1,4 +1,4 @@
-package main
+package ui
 
 import (
 	"fmt"
@@ -10,14 +10,17 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/damienbutt/arch-base/internal/styles"
+	"github.com/damienbutt/arch-base/internal/types"
 )
 
 // UserModel handles user configuration
 type UserModel struct {
-	width          int
-	height         int
-	config         *Config
-	shouldProceed  bool
+	Width          int
+	Height         int
+	config         *types.Config
+	ShouldProceed  bool
 	focused        int
 	usernameInput  textinput.Model
 	passwordInput  textinput.Model
@@ -28,7 +31,7 @@ type UserModel struct {
 	showingGroups  bool
 }
 
-func NewUserModel(config *Config) *UserModel {
+func NewUserModel(config *types.Config) *UserModel {
 	usernameInput := textinput.New()
 	usernameInput.Placeholder = "Enter username"
 	usernameInput.SetValue(config.Username)
@@ -137,7 +140,7 @@ func (m *UserModel) updateGroupSelection(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		m.config.UserGroups = selectedGroups
 
-		m.shouldProceed = true
+		m.ShouldProceed = true
 
 	case " ":
 		// Toggle group selection (simplified - would need proper focus management)
@@ -248,7 +251,7 @@ func (m UserModel) View() string {
 	}
 
 	titleStyle := lipgloss.NewStyle().
-		Foreground(primaryColor).
+		Foreground(styles.PrimaryColor).
 		Bold(true).
 		MarginBottom(1)
 
@@ -258,12 +261,12 @@ func (m UserModel) View() string {
 		Width(15)
 
 	helpStyle := lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(styles.MutedColor).
 		Italic(true).
 		MarginLeft(2)
 
 	errorStyle := lipgloss.NewStyle().
-		Foreground(errorColor).
+		Foreground(styles.ErrorColor).
 		MarginLeft(2)
 
 	var formItems []string
@@ -279,9 +282,9 @@ func (m UserModel) View() string {
 	for i, input := range inputs {
 		var style lipgloss.Style
 		if i == m.focused {
-			style = focusedStyle
+			style = styles.FocusedStyle
 		} else {
-			style = blurredStyle
+			style = styles.BlurredStyle
 		}
 
 		formItem := lipgloss.JoinHorizontal(
@@ -298,7 +301,7 @@ func (m UserModel) View() string {
 			formItems = append(formItems, errorStyle.Render("❌ "+m.errors[0]))
 		} else if i < m.focused || (i == m.focused && len(m.errors) == 0 && input.Value() != "") {
 			formItems = append(formItems, lipgloss.NewStyle().
-				Foreground(successColor).
+				Foreground(styles.SuccessColor).
 				MarginLeft(2).
 				Render("✅ Valid"))
 		}
@@ -321,15 +324,15 @@ func (m UserModel) View() string {
 		lipgloss.JoinVertical(lipgloss.Left, formItems...),
 		"",
 		lipgloss.NewStyle().
-			Foreground(successColor).
+			Foreground(styles.SuccessColor).
 			Render("Use Tab/↑↓ to navigate, Enter to continue to group selection"),
 	)
 
 	containerStyle := lipgloss.NewStyle().
-		Width(m.width - 4).
-		Height(m.height - 8).
+		Width(m.Width - 4).
+		Height(m.Height - 8).
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(primaryColor).
+		BorderForeground(styles.PrimaryColor).
 		Padding(2).
 		Margin(1)
 
@@ -338,7 +341,7 @@ func (m UserModel) View() string {
 
 func (m UserModel) renderGroupSelection() string {
 	titleStyle := lipgloss.NewStyle().
-		Foreground(primaryColor).
+		Foreground(styles.PrimaryColor).
 		Bold(true).
 		MarginBottom(1)
 
@@ -351,7 +354,7 @@ func (m UserModel) renderGroupSelection() string {
 
 		groupStyle := lipgloss.NewStyle().MarginLeft(2)
 		if group == "wheel" {
-			groupStyle = groupStyle.Foreground(warningColor).Bold(true)
+			groupStyle = groupStyle.Foreground(styles.WarningColor).Bold(true)
 		}
 
 		groupItems = append(groupItems, groupStyle.Render(fmt.Sprintf("%s %s", checkbox, group)))
@@ -365,19 +368,19 @@ func (m UserModel) renderGroupSelection() string {
 		lipgloss.JoinVertical(lipgloss.Left, groupItems...),
 		"",
 		lipgloss.NewStyle().
-			Foreground(warningColor).
+			Foreground(styles.WarningColor).
 			Render("⚠️  'wheel' group is required for sudo access"),
 		"",
 		lipgloss.NewStyle().
-			Foreground(successColor).
+			Foreground(styles.SuccessColor).
 			Render("Press Enter to continue, Esc to go back"),
 	)
 
 	containerStyle := lipgloss.NewStyle().
-		Width(m.width - 4).
-		Height(m.height - 8).
+		Width(m.Width - 4).
+		Height(m.Height - 8).
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(primaryColor).
+		BorderForeground(styles.PrimaryColor).
 		Padding(2).
 		Margin(1)
 
@@ -386,10 +389,10 @@ func (m UserModel) renderGroupSelection() string {
 
 // DiskModel handles disk configuration
 type DiskModel struct {
-	width         int
-	height        int
-	config        *Config
-	shouldProceed bool
+	Width         int
+	Height        int
+	config        *types.Config
+	ShouldProceed bool
 	focused       int
 	diskInput     textinput.Model
 	efiInput      textinput.Model
@@ -400,7 +403,7 @@ type DiskModel struct {
 	errors        []string
 }
 
-func NewDiskModel(config *Config) *DiskModel {
+func NewDiskModel(config *types.Config) *DiskModel {
 	diskInput := textinput.New()
 	diskInput.Placeholder = "Enter disk path (e.g., /dev/sda)"
 	diskInput.SetValue(config.TargetDisk)
@@ -459,7 +462,7 @@ func (m *DiskModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Validate and proceed
 				if m.validateDiskInputs() {
 					m.saveDiskConfig()
-					m.shouldProceed = true
+					m.ShouldProceed = true
 				}
 			}
 		case "shift+tab", "up":
@@ -617,7 +620,7 @@ func (m *DiskModel) saveDiskConfig() {
 
 func (m DiskModel) View() string {
 	titleStyle := lipgloss.NewStyle().
-		Foreground(primaryColor).
+		Foreground(styles.PrimaryColor).
 		Bold(true).
 		MarginBottom(1)
 
@@ -627,12 +630,12 @@ func (m DiskModel) View() string {
 		Width(18)
 
 	helpStyle := lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(styles.MutedColor).
 		Italic(true).
 		MarginLeft(2)
 
 	errorStyle := lipgloss.NewStyle().
-		Foreground(errorColor).
+		Foreground(styles.ErrorColor).
 		MarginLeft(2)
 
 	var formItems []string
@@ -649,9 +652,9 @@ func (m DiskModel) View() string {
 	for i, input := range inputs {
 		var style lipgloss.Style
 		if i == m.focused {
-			style = focusedStyle
+			style = styles.FocusedStyle
 		} else {
-			style = blurredStyle
+			style = styles.BlurredStyle
 		}
 
 		formItem := lipgloss.JoinHorizontal(
@@ -668,7 +671,7 @@ func (m DiskModel) View() string {
 			formItems = append(formItems, errorStyle.Render("❌ "+m.errors[0]))
 		} else if i < m.focused || (i == m.focused && len(m.errors) == 0 && input.Value() != "") {
 			formItems = append(formItems, lipgloss.NewStyle().
-				Foreground(successColor).
+				Foreground(styles.SuccessColor).
 				MarginLeft(2).
 				Render("✅ Valid"))
 		}
@@ -692,9 +695,9 @@ func (m DiskModel) View() string {
 
 	// Warning
 	warningBox := lipgloss.NewStyle().
-		Foreground(errorColor).
+		Foreground(styles.ErrorColor).
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(errorColor).
+		BorderForeground(styles.ErrorColor).
 		Padding(0, 1).
 		Render("⚠️  WARNING: All data on the target disk will be permanently erased!")
 
@@ -708,15 +711,15 @@ func (m DiskModel) View() string {
 		lipgloss.JoinVertical(lipgloss.Left, formItems...),
 		"",
 		lipgloss.NewStyle().
-			Foreground(successColor).
+			Foreground(styles.SuccessColor).
 			Render("Use Tab/↑↓ to navigate, Enter to continue"),
 	)
 
 	containerStyle := lipgloss.NewStyle().
-		Width(m.width - 4).
-		Height(m.height - 8).
+		Width(m.Width - 4).
+		Height(m.Height - 8).
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(primaryColor).
+		BorderForeground(styles.PrimaryColor).
 		Padding(2).
 		Margin(1)
 
@@ -725,13 +728,13 @@ func (m DiskModel) View() string {
 
 // Simplified PackageModel and SummaryModel
 type PackageModel struct {
-	width         int
-	height        int
-	config        *Config
-	shouldProceed bool
+	Width         int
+	Height        int
+	config        *types.Config
+	ShouldProceed bool
 }
 
-func NewPackageModel(config *Config) *PackageModel {
+func NewPackageModel(config *types.Config) *PackageModel {
 	return &PackageModel{config: config}
 }
 
@@ -742,7 +745,7 @@ func (m *PackageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
-			m.shouldProceed = true
+			m.ShouldProceed = true
 		}
 	}
 	return m, nil
@@ -750,7 +753,7 @@ func (m *PackageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m PackageModel) View() string {
 	titleStyle := lipgloss.NewStyle().
-		Foreground(primaryColor).
+		Foreground(styles.PrimaryColor).
 		Bold(true).
 		MarginBottom(1)
 
@@ -766,15 +769,15 @@ func (m PackageModel) View() string {
 		"[This is a legacy screen - use ProfileModel instead]",
 		"",
 		lipgloss.NewStyle().
-			Foreground(successColor).
+			Foreground(styles.SuccessColor).
 			Render("Press Enter to continue"),
 	)
 
 	containerStyle := lipgloss.NewStyle().
-		Width(m.width - 4).
-		Height(m.height - 8).
+		Width(m.Width - 4).
+		Height(m.Height - 8).
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(primaryColor).
+		BorderForeground(styles.PrimaryColor).
 		Padding(2).
 		Margin(1)
 
@@ -782,13 +785,13 @@ func (m PackageModel) View() string {
 }
 
 type SummaryModel struct {
-	width          int
-	height         int
-	config         *Config
-	shouldGenerate bool
+	Width          int
+	Height         int
+	config         *types.Config
+	ShouldGenerate bool
 }
 
-func NewSummaryModel(config *Config) *SummaryModel {
+func NewSummaryModel(config *types.Config) *SummaryModel {
 	return &SummaryModel{config: config}
 }
 
@@ -799,7 +802,7 @@ func (m *SummaryModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
-			m.shouldGenerate = true
+			m.ShouldGenerate = true
 		}
 	}
 	return m, nil
@@ -807,7 +810,7 @@ func (m *SummaryModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m SummaryModel) View() string {
 	titleStyle := lipgloss.NewStyle().
-		Foreground(primaryColor).
+		Foreground(styles.PrimaryColor).
 		Bold(true).
 		MarginBottom(1)
 
@@ -817,7 +820,7 @@ func (m SummaryModel) View() string {
 		Width(20)
 
 	valueStyle := lipgloss.NewStyle().
-		Foreground(successColor)
+		Foreground(styles.SuccessColor)
 
 	content := lipgloss.JoinVertical(
 		lipgloss.Left,
@@ -869,20 +872,20 @@ func (m SummaryModel) View() string {
 			valueStyle.Render(m.config.DesktopEnv)),
 		"",
 		lipgloss.NewStyle().
-			Foreground(warningColor).
+			Foreground(styles.WarningColor).
 			Bold(true).
 			Render("Press Enter to start installation"),
 	)
 
 	maxWidth := 80
-	if m.width > 0 && m.width < maxWidth {
-		maxWidth = m.width - 4
+	if m.Width > 0 && m.Width < maxWidth {
+		maxWidth = m.Width - 4
 	}
 
 	containerStyle := lipgloss.NewStyle().
 		Width(maxWidth).
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(primaryColor).
+		BorderForeground(styles.PrimaryColor).
 		Padding(1, 2).
 		Margin(1, 2)
 
@@ -891,17 +894,17 @@ func (m SummaryModel) View() string {
 
 // InstallModel handles the actual installation process
 type InstallModel struct {
-	width       int
-	height      int
-	config      *Config
-	installing  bool
-	completed   bool
-	progress    []string
+	Width       int
+	Height      int
+	config      *types.Config
+	Installing  bool
+	Completed   bool
+	Progress    []string
 	currentStep string
 	error       string
 }
 
-func NewInstallModel(config *Config) *InstallModel {
+func NewInstallModel(config *types.Config) *InstallModel {
 	return &InstallModel{
 		config: config,
 	}
@@ -912,7 +915,7 @@ func (m InstallModel) Init() tea.Cmd { return nil }
 func (m *InstallModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if m.completed && !m.installing {
+		if m.Completed && !m.Installing {
 			switch msg.String() {
 			case "r":
 				// Reboot command would go here
@@ -920,10 +923,10 @@ func (m *InstallModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "q", "enter":
 				return m, tea.Quit
 			}
-		} else if !m.installing {
+		} else if !m.Installing {
 			switch msg.String() {
 			case "enter":
-				m.installing = true
+				m.Installing = true
 				return m, m.startInstallation()
 			case "esc":
 				// Go back to summary if not installing
@@ -932,16 +935,16 @@ func (m *InstallModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case installProgressMsg:
 		m.currentStep = string(msg)
-		m.progress = append(m.progress, m.currentStep)
+		m.Progress = append(m.Progress, m.currentStep)
 		return m, nil
 	case installCompleteMsg:
-		m.completed = true
-		m.installing = false
+		m.Completed = true
+		m.Installing = false
 		m.currentStep = "Installation completed successfully!"
 		return m, nil
 	case installErrorMsg:
 		m.error = string(msg)
-		m.installing = false
+		m.Installing = false
 		return m, nil
 	}
 	return m, nil
@@ -977,11 +980,11 @@ func (m *InstallModel) startInstallation() tea.Cmd {
 
 func (m InstallModel) View() string {
 	titleStyle := lipgloss.NewStyle().
-		Foreground(primaryColor).
+		Foreground(styles.PrimaryColor).
 		Bold(true).
 		MarginBottom(1)
 
-	if !m.installing && !m.completed && m.error == "" {
+	if !m.Installing && !m.Completed && m.error == "" {
 		// Pre-installation confirmation
 		content := lipgloss.JoinVertical(
 			lipgloss.Left,
@@ -1002,24 +1005,24 @@ func (m InstallModel) View() string {
 			"• Create user account",
 			"",
 			lipgloss.NewStyle().
-				Foreground(errorColor).
+				Foreground(styles.ErrorColor).
 				Bold(true).
 				Render("This action cannot be undone!"),
 			"",
 			lipgloss.NewStyle().
-				Foreground(successColor).
+				Foreground(styles.SuccessColor).
 				Render("Press Enter to start installation, Esc to go back"),
 		)
 
 		maxWidth := 80
-		if m.width > 0 && m.width < maxWidth {
-			maxWidth = m.width - 4
+		if m.Width > 0 && m.Width < maxWidth {
+			maxWidth = m.Width - 4
 		}
 
 		containerStyle := lipgloss.NewStyle().
 			Width(maxWidth).
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(errorColor).
+			BorderForeground(styles.ErrorColor).
 			Padding(1, 2).
 			Margin(1, 2)
 
@@ -1033,32 +1036,32 @@ func (m InstallModel) View() string {
 			titleStyle.Render("❌ Installation Failed"),
 			"",
 			lipgloss.NewStyle().
-				Foreground(errorColor).
+				Foreground(styles.ErrorColor).
 				Render("Error: "+m.error),
 			"",
 			"Please check the logs and try again.",
 			"",
 			lipgloss.NewStyle().
-				Foreground(mutedColor).
+				Foreground(styles.MutedColor).
 				Render("Press q to exit"),
 		)
 
 		maxWidth := 80
-		if m.width > 0 && m.width < maxWidth {
-			maxWidth = m.width - 4
+		if m.Width > 0 && m.Width < maxWidth {
+			maxWidth = m.Width - 4
 		}
 
 		containerStyle := lipgloss.NewStyle().
 			Width(maxWidth).
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(errorColor).
+			BorderForeground(styles.ErrorColor).
 			Padding(1, 2).
 			Margin(1, 2)
 
 		return containerStyle.Render(content)
 	}
 
-	if m.completed {
+	if m.Completed {
 		// Installation complete
 		content := lipgloss.JoinVertical(
 			lipgloss.Left,
@@ -1080,20 +1083,20 @@ func (m InstallModel) View() string {
 			"4. Log in with your user account",
 			"",
 			lipgloss.NewStyle().
-				Foreground(successColor).
+				Foreground(styles.SuccessColor).
 				Bold(true).
 				Render("Press 'r' to reboot now, or 'q' to exit"),
 		)
 
 		maxWidth := 80
-		if m.width > 0 && m.width < maxWidth {
-			maxWidth = m.width - 4
+		if m.Width > 0 && m.Width < maxWidth {
+			maxWidth = m.Width - 4
 		}
 
 		containerStyle := lipgloss.NewStyle().
 			Width(maxWidth).
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(successColor).
+			BorderForeground(styles.SuccessColor).
 			Padding(1, 2).
 			Margin(1, 2)
 
@@ -1102,16 +1105,16 @@ func (m InstallModel) View() string {
 
 	// Installation in progress
 	var progressItems []string
-	for i, step := range m.progress {
-		if i == len(m.progress)-1 {
+	for i, step := range m.Progress {
+		if i == len(m.Progress)-1 {
 			// Current step
 			progressItems = append(progressItems, lipgloss.NewStyle().
-				Foreground(primaryColor).
+				Foreground(styles.PrimaryColor).
 				Render("🔄 "+step))
 		} else {
 			// Completed step
 			progressItems = append(progressItems, lipgloss.NewStyle().
-				Foreground(successColor).
+				Foreground(styles.SuccessColor).
 				Render("✅ "+step))
 		}
 	}
@@ -1125,19 +1128,19 @@ func (m InstallModel) View() string {
 		"Please wait while the installation completes...",
 		"",
 		lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(styles.MutedColor).
 			Render("This may take several minutes depending on your internet connection."),
 	)
 
 	maxWidth := 80
-	if m.width > 0 && m.width < maxWidth {
-		maxWidth = m.width - 4
+	if m.Width > 0 && m.Width < maxWidth {
+		maxWidth = m.Width - 4
 	}
 
 	containerStyle := lipgloss.NewStyle().
 		Width(maxWidth).
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(primaryColor).
+		BorderForeground(styles.PrimaryColor).
 		Padding(1, 2).
 		Margin(1, 2)
 
@@ -1153,10 +1156,10 @@ type installErrorMsg string
 
 // NetworkModel handles network configuration
 type NetworkModel struct {
-	width         int
-	height        int
-	config        *Config
-	shouldProceed bool
+	Width         int
+	Height        int
+	config        *types.Config
+	ShouldProceed bool
 	focused       int
 	networkType   int // 0: DHCP, 1: Static, 2: None
 	staticIP      textinput.Model
@@ -1166,7 +1169,7 @@ type NetworkModel struct {
 	errors        []string
 }
 
-func NewNetworkModel(config *Config) *NetworkModel {
+func NewNetworkModel(config *types.Config) *NetworkModel {
 	staticIP := textinput.New()
 	staticIP.Placeholder = "192.168.1.100/24"
 	staticIP.SetValue(config.StaticIP)
@@ -1210,7 +1213,7 @@ func (m *NetworkModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			if m.validateAndSave() {
-				m.shouldProceed = true
+				m.ShouldProceed = true
 			}
 		case "tab", "down":
 			m.nextField()
@@ -1290,7 +1293,7 @@ func (m *NetworkModel) validateAndSave() bool {
 }
 
 func (m NetworkModel) View() string {
-	title := titleStyle.Render("🌐 Network Configuration")
+	title := styles.TitleStyle.Render("🌐 Network Configuration")
 
 	networkTypes := []string{"DHCP (automatic)", "Static IP", "No network"}
 	var networkOptions []string
@@ -1328,10 +1331,10 @@ func (m NetworkModel) View() string {
 	}...)
 
 	containerStyle := lipgloss.NewStyle().
-		Width(m.width - 4).
-		Height(m.height - 8).
+		Width(m.Width - 4).
+		Height(m.Height - 8).
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(primaryColor).
+		BorderForeground(styles.PrimaryColor).
 		Padding(2).
 		Margin(1)
 
@@ -1340,10 +1343,10 @@ func (m NetworkModel) View() string {
 
 // MirrorModel handles mirror selection and configuration
 type MirrorModel struct {
-	width             int
-	height            int
-	config            *Config
-	shouldProceed     bool
+	Width             int
+	Height            int
+	config            *types.Config
+	ShouldProceed     bool
 	focused           int
 	regions           []string
 	selectedRegion    int
@@ -1352,7 +1355,7 @@ type MirrorModel struct {
 	errors            []string
 }
 
-func NewMirrorModel(config *Config) *MirrorModel {
+func NewMirrorModel(config *types.Config) *MirrorModel {
 	regions := []string{"Worldwide", "United States", "Germany", "United Kingdom", "France", "Canada", "Australia", "Japan", "China"}
 
 	parallelDownloads := textinput.New()
@@ -1380,7 +1383,7 @@ func (m *MirrorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			if m.validateAndSave() {
-				m.shouldProceed = true
+				m.ShouldProceed = true
 			}
 		case "tab", "down":
 			m.focused = (m.focused + 1) % 3
@@ -1423,7 +1426,7 @@ func (m *MirrorModel) validateAndSave() bool {
 }
 
 func (m MirrorModel) View() string {
-	title := titleStyle.Render("🪞 Mirror Configuration")
+	title := styles.TitleStyle.Render("🪞 Mirror Configuration")
 
 	content := []string{
 		title,
@@ -1437,10 +1440,10 @@ func (m MirrorModel) View() string {
 	}
 
 	containerStyle := lipgloss.NewStyle().
-		Width(m.width - 4).
-		Height(m.height - 8).
+		Width(m.Width - 4).
+		Height(m.Height - 8).
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(primaryColor).
+		BorderForeground(styles.PrimaryColor).
 		Padding(2).
 		Margin(1)
 
@@ -1449,17 +1452,17 @@ func (m MirrorModel) View() string {
 
 // BootloaderModel handles bootloader configuration
 type BootloaderModel struct {
-	width         int
-	height        int
-	config        *Config
-	shouldProceed bool
+	Width         int
+	Height        int
+	config        *types.Config
+	ShouldProceed bool
 	focused       int
 	bootloader    int // 0: GRUB, 1: systemd-boot, 2: rEFInd
 	espMountpoint textinput.Model
 	errors        []string
 }
 
-func NewBootloaderModel(config *Config) *BootloaderModel {
+func NewBootloaderModel(config *types.Config) *BootloaderModel {
 	espMountpoint := textinput.New()
 	espMountpoint.Placeholder = "/boot/efi"
 	espMountpoint.SetValue(config.ESPMountpoint)
@@ -1490,7 +1493,7 @@ func (m *BootloaderModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			if m.validateAndSave() {
-				m.shouldProceed = true
+				m.ShouldProceed = true
 			}
 		case "tab", "down":
 			m.focused = (m.focused + 1) % 2
@@ -1527,7 +1530,7 @@ func (m *BootloaderModel) validateAndSave() bool {
 }
 
 func (m BootloaderModel) View() string {
-	title := titleStyle.Render("🥾 Bootloader Configuration")
+	title := styles.TitleStyle.Render("🥾 Bootloader Configuration")
 
 	bootloaders := []string{"GRUB (recommended)", "systemd-boot (UEFI only)", "rEFInd (advanced)"}
 	var bootloaderOptions []string
@@ -1554,10 +1557,10 @@ func (m BootloaderModel) View() string {
 	}...)
 
 	containerStyle := lipgloss.NewStyle().
-		Width(m.width - 4).
-		Height(m.height - 8).
+		Width(m.Width - 4).
+		Height(m.Height - 8).
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(primaryColor).
+		BorderForeground(styles.PrimaryColor).
 		Padding(2).
 		Margin(1)
 
@@ -1566,10 +1569,10 @@ func (m BootloaderModel) View() string {
 
 // ProfileModel handles installation profile selection (replaces simple PackageModel)
 type ProfileModel struct {
-	width         int
-	height        int
-	config        *Config
-	shouldProceed bool
+	Width         int
+	Height        int
+	config        *types.Config
+	ShouldProceed bool
 	focused       int
 	profile       int // 0: Desktop, 1: Server, 2: Minimal
 	desktopEnv    int // 0: GNOME, 1: KDE, 2: XFCE, 3: i3, etc.
@@ -1579,7 +1582,7 @@ type ProfileModel struct {
 	errors        []string
 }
 
-func NewProfileModel(config *Config) *ProfileModel {
+func NewProfileModel(config *types.Config) *ProfileModel {
 	profile := 0
 	if config.Profile == "server" {
 		profile = 1
@@ -1636,7 +1639,7 @@ func (m *ProfileModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			if m.validateAndSave() {
-				m.shouldProceed = true
+				m.ShouldProceed = true
 			}
 		case "tab", "down":
 			maxField := 4
@@ -1694,7 +1697,7 @@ func (m *ProfileModel) validateAndSave() bool {
 }
 
 func (m ProfileModel) View() string {
-	title := titleStyle.Render("📦 Installation Profile")
+	title := styles.TitleStyle.Render("📦 Installation Profile")
 
 	profiles := []string{"Desktop (full GUI)", "Server (no GUI)", "Minimal (base only)"}
 	var profileOptions []string
@@ -1737,10 +1740,10 @@ func (m ProfileModel) View() string {
 	}...)
 
 	containerStyle := lipgloss.NewStyle().
-		Width(m.width - 4).
-		Height(m.height - 8).
+		Width(m.Width - 4).
+		Height(m.Height - 8).
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(primaryColor).
+		BorderForeground(styles.PrimaryColor).
 		Padding(2).
 		Margin(1)
 

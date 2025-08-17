@@ -1,6 +1,6 @@
-# Pre-commit hooks configuration
-# Install with: pre-commit install
-# Run manually with: pre-commit run --all-files
+# Pre-commit hooks configuration for Go-only project
+# Install with: pre-commit install OR lefthook install (recommended)
+# Run manually with: pre-commit run --all-files OR lefthook run pre-commit
 
 repos:
   # Go formatting and linting
@@ -34,6 +34,13 @@ repos:
         files: go\.(mod|sum)$
         pass_filenames: false
 
+      - id: golangci-lint
+        name: golangci-lint
+        entry: sh -c 'cd tui-prototype && if command -v golangci-lint >/dev/null 2>&1; then golangci-lint run --fix; else echo "golangci-lint not installed"; fi'
+        language: system
+        files: \.go$
+        pass_filenames: false
+
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
@@ -48,6 +55,36 @@ repos:
         args: ["--maxkb=1024"]
       - id: mixed-line-ending
         args: ["--fix=lf"]
+
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.6
+    hooks:
+      - id: shellcheck
+        files: \.(sh|bash|zsh)$
+        args: ["-e", "SC1091"]
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.37.0
+    hooks:
+      - id: markdownlint
+        args: ["--fix", "--config", ".markdownlint.yaml"]
+
+  # YAML linting
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.33.0
+    hooks:
+      - id: yamllint
+        args: ["-d", "relaxed"]
+
+  # Secret detection
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: package.lock.json
 
   # Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli

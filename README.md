@@ -136,7 +136,7 @@ Thanks go to these awesome people ([emoji key](https://allcontributors.org/docs/
 This project follows the [all-contributors](https://allcontributors.org) specification.
 Contributions of any kind are welcome!
 
-Check out the [contributing guide](CONTRIBUTING.md) for more information.
+Check out the [contributing guide](docs/CONTRIBUTING.md) for more information.
 
 ## Learn More :books:
 

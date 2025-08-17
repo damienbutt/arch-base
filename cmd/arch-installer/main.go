@@ -8,6 +8,12 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/damienbutt/arch-base/internal/installer"
+	"github.com/damienbutt/arch-base/internal/styles"
+	"github.com/damienbutt/arch-base/internal/system"
+	"github.com/damienbutt/arch-base/internal/types"
+	"github.com/damienbutt/arch-base/internal/ui"
 )
 
 // Screen types
@@ -26,149 +32,32 @@ const (
 	installScreen
 )
 
+// Message types
+type installCompleteMsg struct {
+	err error
+}
+
 type Model struct {
-	width      int
-	height     int
+	Width      int
+	Height     int
 	screen     Screen
 	quitting   bool
-	config     *Config
-	welcome    *WelcomeModel
-	system     *SystemModel
-	network    *NetworkModel
-	mirror     *MirrorModel
-	disk       *DiskModel
-	user       *UserModel
-	bootloader *BootloaderModel
-	profile    *ProfileModel
-	summary    *SummaryModel
-	install    *InstallModel
-	installer  *InstallerEngine
+	config     *types.Config
+	welcome    *ui.WelcomeModel
+	system     *system.SystemModel
+	network    *ui.NetworkModel
+	mirror     *ui.MirrorModel
+	disk       *ui.DiskModel
+	user       *ui.UserModel
+	bootloader *ui.BootloaderModel
+	profile    *ui.ProfileModel
+	summary    *ui.SummaryModel
+	install    *ui.InstallModel
+	installer  *installer.InstallerEngine
 }
-
-// Configuration structure that matches archinstall functionality
-type Config struct {
-	// System configuration
-	Hostname   string
-	Timezone   string
-	Locale     string
-	Keymap     string
-	Region     string
-	NTPEnabled bool
-
-	// Boot configuration
-	BootMode      string // "uefi" or "bios"
-	Bootloader    string // "grub", "systemd-boot", "refind"
-	ESPMountpoint string // ESP mount point for UEFI
-
-	// User configuration
-	Username     string
-	UserGroups   []string
-	UserPassword string
-	RootPassword string
-	EnableSudo   bool
-
-	// Disk configuration
-	TargetDisk      string
-	PartitionScheme string // "auto", "manual"
-	EFISize         string
-	RootSize        string
-	HomeSize        string
-	SwapSize        string
-	CryptrootName   string
-	FSType          string // "ext4", "btrfs", "xfs"
-	BtrfsLayout     string
-	CompressType    string
-	SwapEnabled     bool
-	LuksEnabled     bool
-	LuksType        string
-
-	// Network configuration
-	NetworkConfig    string // "dhcp", "static", "none"
-	StaticIP         string
-	Gateway          string
-	DNS              []string
-	EnableNetworkMgr bool
-
-	// Mirrors and repositories
-	MirrorRegion      string
-	CustomMirrors     []string
-	TestMirrors       bool
-	ParallelDownloads int
-
-	// Package configuration
-	Profile    string // "desktop", "minimal", "server"
-	DesktopEnv string // "gnome", "kde", "xfce", etc.
-	Packages   []string
-	AURHelper  string // "yay", "paru", "none"
-	Microcode  string // "intel", "amd", "none"
-
-	// Audio configuration
-	AudioSystem   string // "pulseaudio", "pipewire", "alsa"
-	AudioPackages []string
-
-	// Services configuration
-	EnabledServices  []string
-	DisabledServices []string
-
-	// Security configuration
-	FirewallEnabled bool
-	SELinuxEnabled  bool
-	FailBanEnabled  bool
-
-	// Installation behavior
-	AutoReboot        bool
-	SkipNonFree       bool
-	DryRun            bool
-	VerboseLogging    bool
-	PostInstallScript string
-}
-
-// Color scheme
-var (
-	primaryColor    = lipgloss.Color("#7C3AED")
-	successColor    = lipgloss.Color("#10B981")
-	warningColor    = lipgloss.Color("#F59E0B")
-	errorColor      = lipgloss.Color("#EF4444")
-	mutedColor      = lipgloss.Color("#6B7280")
-	backgroundColor = lipgloss.Color("#1F2937")
-)
-
-// Common styles
-var (
-	titleStyle = lipgloss.NewStyle().
-			Foreground(primaryColor).
-			Bold(true).
-			Margin(0, 0, 1, 0)
-
-	subtitleStyle = lipgloss.NewStyle().
-			Foreground(mutedColor).
-			Margin(0, 0, 1, 0)
-
-	focusedStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(primaryColor).
-			Padding(0, 1)
-
-	blurredStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(mutedColor).
-			Padding(0, 1)
-
-	buttonStyle = lipgloss.NewStyle().
-			Background(primaryColor).
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Padding(0, 3).
-			Margin(0, 1)
-
-	containerStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(primaryColor).
-			Padding(1, 2).
-			Margin(1, 0)
-)
 
 func initialModel() Model {
-	config := &Config{
+	config := &types.Config{
 		// Set reasonable defaults matching your current script
 		Hostname:          "arch-base",
 		Timezone:          "UTC",
@@ -198,17 +87,17 @@ func initialModel() Model {
 	return Model{
 		screen:     welcomeScreen,
 		config:     config,
-		welcome:    NewWelcomeModel(),
-		system:     NewSystemModel(config),
-		network:    NewNetworkModel(config),
-		mirror:     NewMirrorModel(config),
-		disk:       NewDiskModel(config),
-		user:       NewUserModel(config),
-		bootloader: NewBootloaderModel(config),
-		profile:    NewProfileModel(config),
-		summary:    NewSummaryModel(config),
-		install:    NewInstallModel(config),
-		installer:  NewInstallerEngine(config),
+		welcome:    ui.NewWelcomeModel(),
+		system:     system.NewSystemModel(config),
+		network:    ui.NewNetworkModel(config),
+		mirror:     ui.NewMirrorModel(config),
+		disk:       ui.NewDiskModel(config),
+		user:       ui.NewUserModel(config),
+		bootloader: ui.NewBootloaderModel(config),
+		profile:    ui.NewProfileModel(config),
+		summary:    ui.NewSummaryModel(config),
+		install:    ui.NewInstallModel(config),
+		installer:  installer.NewInstallerEngine(config),
 	}
 }
 
@@ -219,30 +108,30 @@ func (m Model) Init() tea.Cmd {
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
+		m.Width = msg.Width
+		m.Height = msg.Height
 
 		// Update all screen models with new dimensions
-		m.welcome.width = msg.Width
-		m.welcome.height = msg.Height
-		m.system.width = msg.Width
-		m.system.height = msg.Height
-		m.network.width = msg.Width
-		m.network.height = msg.Height
-		m.mirror.width = msg.Width
-		m.mirror.height = msg.Height
-		m.disk.width = msg.Width
-		m.disk.height = msg.Height
-		m.user.width = msg.Width
-		m.user.height = msg.Height
-		m.bootloader.width = msg.Width
-		m.bootloader.height = msg.Height
-		m.profile.width = msg.Width
-		m.profile.height = msg.Height
-		m.summary.width = msg.Width
-		m.summary.height = msg.Height
-		m.install.width = msg.Width
-		m.install.height = msg.Height
+		m.welcome.Width = msg.Width
+		m.welcome.Height = msg.Height
+		m.system.Width = msg.Width
+		m.system.Height = msg.Height
+		m.network.Width = msg.Width
+		m.network.Height = msg.Height
+		m.mirror.Width = msg.Width
+		m.mirror.Height = msg.Height
+		m.disk.Width = msg.Width
+		m.disk.Height = msg.Height
+		m.user.Width = msg.Width
+		m.user.Height = msg.Height
+		m.bootloader.Width = msg.Width
+		m.bootloader.Height = msg.Height
+		m.profile.Width = msg.Width
+		m.profile.Height = msg.Height
+		m.summary.Width = msg.Width
+		m.summary.Height = msg.Height
+		m.install.Width = msg.Width
+		m.install.Height = msg.Height
 
 		return m, nil
 
@@ -269,114 +158,114 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m.screen {
 	case welcomeScreen:
 		newModel, newCmd := m.welcome.Update(msg)
-		if welcome, ok := newModel.(*WelcomeModel); ok {
+		if welcome, ok := newModel.(*ui.WelcomeModel); ok {
 			m.welcome = welcome
 		}
 		cmd = newCmd
 
-		if m.welcome.shouldProceed {
+		if m.welcome.ShouldProceed {
 			m.screen = systemScreen
-			m.welcome.shouldProceed = false
+			m.welcome.ShouldProceed = false
 		}
-		if m.welcome.shouldQuit {
+		if m.welcome.ShouldQuit {
 			m.quitting = true
 			return m, tea.Quit
 		}
 
 	case systemScreen:
 		newModel, newCmd := m.system.Update(msg)
-		if system, ok := newModel.(*SystemModel); ok {
+		if system, ok := newModel.(*system.SystemModel); ok {
 			m.system = system
 		}
 		cmd = newCmd
 
-		if m.system.shouldProceed {
+		if m.system.ShouldProceed {
 			m.screen = networkScreen
-			m.system.shouldProceed = false
+			m.system.ShouldProceed = false
 		}
 
 	case networkScreen:
 		newModel, newCmd := m.network.Update(msg)
-		if network, ok := newModel.(*NetworkModel); ok {
+		if network, ok := newModel.(*ui.NetworkModel); ok {
 			m.network = network
 		}
 		cmd = newCmd
 
-		if m.network.shouldProceed {
+		if m.network.ShouldProceed {
 			m.screen = mirrorScreen
-			m.network.shouldProceed = false
+			m.network.ShouldProceed = false
 		}
 
 	case mirrorScreen:
 		newModel, newCmd := m.mirror.Update(msg)
-		if mirror, ok := newModel.(*MirrorModel); ok {
+		if mirror, ok := newModel.(*ui.MirrorModel); ok {
 			m.mirror = mirror
 		}
 		cmd = newCmd
 
-		if m.mirror.shouldProceed {
+		if m.mirror.ShouldProceed {
 			m.screen = diskScreen
-			m.mirror.shouldProceed = false
+			m.mirror.ShouldProceed = false
 		}
 
 	case diskScreen:
 		newModel, newCmd := m.disk.Update(msg)
-		if disk, ok := newModel.(*DiskModel); ok {
+		if disk, ok := newModel.(*ui.DiskModel); ok {
 			m.disk = disk
 		}
 		cmd = newCmd
 
-		if m.disk.shouldProceed {
+		if m.disk.ShouldProceed {
 			m.screen = userScreen
-			m.disk.shouldProceed = false
+			m.disk.ShouldProceed = false
 		}
 
 	case userScreen:
 		newModel, newCmd := m.user.Update(msg)
-		if user, ok := newModel.(*UserModel); ok {
+		if user, ok := newModel.(*ui.UserModel); ok {
 			m.user = user
 		}
 		cmd = newCmd
 
-		if m.user.shouldProceed {
+		if m.user.ShouldProceed {
 			m.screen = bootloaderScreen
-			m.user.shouldProceed = false
+			m.user.ShouldProceed = false
 		}
 
 	case bootloaderScreen:
 		newModel, newCmd := m.bootloader.Update(msg)
-		if bootloader, ok := newModel.(*BootloaderModel); ok {
+		if bootloader, ok := newModel.(*ui.BootloaderModel); ok {
 			m.bootloader = bootloader
 		}
 		cmd = newCmd
 
-		if m.bootloader.shouldProceed {
+		if m.bootloader.ShouldProceed {
 			m.screen = profileScreen
-			m.bootloader.shouldProceed = false
+			m.bootloader.ShouldProceed = false
 		}
 
 	case profileScreen:
 		newModel, newCmd := m.profile.Update(msg)
-		if profile, ok := newModel.(*ProfileModel); ok {
+		if profile, ok := newModel.(*ui.ProfileModel); ok {
 			m.profile = profile
 		}
 		cmd = newCmd
 
-		if m.profile.shouldProceed {
+		if m.profile.ShouldProceed {
 			m.screen = summaryScreen
-			m.profile.shouldProceed = false
+			m.profile.ShouldProceed = false
 		}
 
 	case summaryScreen:
 		newModel, newCmd := m.summary.Update(msg)
-		if summary, ok := newModel.(*SummaryModel); ok {
+		if summary, ok := newModel.(*ui.SummaryModel); ok {
 			m.summary = summary
 		}
 		cmd = newCmd
 
-		if m.summary.shouldGenerate {
+		if m.summary.ShouldGenerate {
 			m.screen = installScreen
-			m.summary.shouldGenerate = false
+			m.summary.ShouldGenerate = false
 		}
 
 	case installScreen:
@@ -384,20 +273,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyMsg:
 			switch msg.String() {
 			case "q":
-				if m.install.completed {
+				if m.install.Completed {
 					return m, tea.Quit
 				}
 				return m, nil
 			case "escape":
-				if !m.install.installing && !m.install.completed {
+				if !m.install.Installing && !m.install.Completed {
 					m.screen = summaryScreen
 				}
 				return m, nil
 			case "enter":
-				if !m.install.installing && !m.install.completed {
+				if !m.install.Installing && !m.install.Completed {
 					// Start installation
-					m.install.installing = true
-					m.install.progress = append(m.install.progress, "Starting installation...")
+					m.install.Installing = true
+					m.install.Progress = append(m.install.Progress, "Starting installation...")
 					return m, tea.Cmd(func() tea.Msg {
 						err := m.installer.RunInstallation()
 						return installCompleteMsg{err: err}
@@ -405,7 +294,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return m, nil
 			case "r":
-				if m.install.completed {
+				if m.install.Completed {
 					// Reboot system
 					cmd := exec.Command("reboot")
 					cmd.Run()
@@ -414,17 +303,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 		case installCompleteMsg:
-			m.install.installing = false
-			m.install.completed = true
+			m.install.Installing = false
+			m.install.Completed = true
 			if msg.err != nil {
-				m.install.progress = append(m.install.progress, "Installation failed: "+msg.err.Error())
+				m.install.Progress = append(m.install.Progress, "Installation failed: "+msg.err.Error())
 			} else {
-				m.install.progress = append(m.install.progress, "Installation completed successfully!")
+				m.install.Progress = append(m.install.Progress, "Installation completed successfully!")
 			}
 			return m, nil
 		}
 		updatedModel, cmd := m.install.Update(msg)
-		if install, ok := updatedModel.(*InstallModel); ok {
+		if install, ok := updatedModel.(*ui.InstallModel); ok {
 			m.install = install
 		}
 		return m, cmd
@@ -437,12 +326,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	if m.quitting {
 		return lipgloss.NewStyle().
-			Foreground(successColor).
+			Foreground(styles.SuccessColor).
 			Bold(true).
 			Render("Thanks for using Arch-Base TUI Installer! 👋")
 	}
 
-	if m.width == 0 || m.height == 0 {
+	if m.Width == 0 || m.Height == 0 {
 		return "Initializing..."
 	}
 
@@ -500,24 +389,24 @@ func (m Model) renderHeader() string {
 			// Current step
 			style = style.
 				Foreground(lipgloss.Color("#FFFFFF")).
-				Background(primaryColor).
+				Background(styles.PrimaryColor).
 				Bold(true)
 		} else if i < int(m.screen) {
 			// Completed step
 			style = style.
-				Foreground(successColor).
+				Foreground(styles.SuccessColor).
 				Bold(true)
 		} else {
 			// Future step
 			style = style.
-				Foreground(mutedColor)
+				Foreground(styles.MutedColor)
 		}
 
 		progressItems = append(progressItems, style.Render(step))
 	}
 
 	title := lipgloss.NewStyle().
-		Foreground(primaryColor).
+		Foreground(styles.PrimaryColor).
 		Bold(true).
 		Render("🏗️  Arch-Base Installation Wizard")
 
@@ -525,10 +414,10 @@ func (m Model) renderHeader() string {
 
 	headerStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(primaryColor).
+		BorderForeground(styles.PrimaryColor).
 		Padding(1).
 		Margin(0, 1, 1, 1).
-		Width(m.width - 4)
+		Width(m.Width - 4)
 
 	return headerStyle.Render(
 		lipgloss.JoinVertical(
@@ -552,10 +441,10 @@ func (m Model) renderFooter() string {
 		hints = append(hints, "Continue (Enter)")
 		hints = append(hints, "Quit (q)")
 	case installScreen:
-		if m.install.completed {
+		if m.install.Completed {
 			hints = append(hints, "Reboot (r)")
 			hints = append(hints, "Exit (q)")
-		} else if !m.install.installing {
+		} else if !m.install.Installing {
 			hints = append(hints, "Start Installation (Enter)")
 			hints = append(hints, "← Back (Esc)")
 		} else {
@@ -570,14 +459,14 @@ func (m Model) renderFooter() string {
 	hints = append(hints, "Exit (Ctrl+C)")
 
 	footerText := lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(styles.MutedColor).
 		Render("Navigation: " + strings.Join(hints, " • "))
 
 	return lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), true, false, false, false).
-		BorderForeground(mutedColor).
+		BorderForeground(styles.MutedColor).
 		Padding(0, 2).
-		Width(m.width).
+		Width(m.Width).
 		Render(footerText)
 }
 

@@ -1,4 +1,4 @@
-package main
+package installer
 
 import (
 	"fmt"
@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/damienbutt/arch-base/internal/types"
 )
 
 // MockLogger is a mock implementation of Logger for testing
@@ -57,7 +59,7 @@ func (m *MockLogger) Close() error {
 // InstallerTestSuite contains tests for the InstallerEngine
 type InstallerTestSuite struct {
 	suite.Suite
-	config    *Config
+	config    *types.Config
 	installer *InstallerEngine
 	logger    *MockLogger
 	tempDir   string
@@ -69,7 +71,7 @@ func (suite *InstallerTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 	suite.tempDir = tempDir
 
-	suite.config = &Config{
+	suite.config = &types.Config{
 		Hostname:          "test-arch",
 		Timezone:          "UTC",
 		Locale:            "en_US.UTF-8",
@@ -310,7 +312,7 @@ func TestCommandMocking(t *testing.T) {
 	// In a real test environment, you would mock exec.Command
 	// For now, we'll test the command generation logic
 
-	config := &Config{
+	config := &types.Config{
 		TargetDisk: "/dev/sda",
 		FSType:     "btrfs",
 	}
@@ -330,7 +332,7 @@ func TestCommandMocking(t *testing.T) {
 
 // Integration-style tests (would run against mock filesystem)
 func TestInstallationSteps(t *testing.T) {
-	config := &Config{
+	config := &types.Config{
 		Hostname:    "test-arch",
 		Username:    "testuser",
 		TargetDisk:  "/dev/sda",

@@ -9,8 +9,8 @@ on:
     paths:
       - "tui-prototype/go.mod"
       - "tui-prototype/go.sum"
-      - "package.json"
-      - "yarn.lock"
+      - ".goreleaser.yaml"
+      - "lefthook.yml"
 
 jobs:
   security-scan:
@@ -48,19 +48,6 @@ jobs:
         working-directory: ./tui-prototype
         run: govulncheck ./...
 
-      - name: Setup Node.js for security scan
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "yarn"
-
-      - name: Install Node.js dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Run npm audit
-        run: yarn audit --level moderate
-        continue-on-error: true
-
   dependency-update:
     name: Dependency Update Check
     runs-on: ubuntu-latest
@@ -83,17 +70,6 @@ jobs:
           go get -u ./...
           go mod tidy
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "yarn"
-
-      - name: Update Node.js dependencies
-        run: |
-          yarn upgrade --latest
-          yarn install
-
       - name: Check for changes
         id: verify-changed-files
         run: |
@@ -109,16 +85,15 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: update dependencies"
-          title: "chore: automated dependency updates"
+          commit-message: "chore: update Go dependencies"
+          title: "chore: automated Go dependency updates"
           body: |
-            ## Automated Dependency Updates
+            ## Automated Go Dependency Updates
 
-            This PR was automatically created to update project dependencies.
+            This PR was automatically created to update Go dependencies.
 
             ### Changes
             - 📦 Updated Go dependencies in `tui-prototype/`
-            - 📦 Updated Node.js dependencies
 
             ### Files Changed
             ${{ steps.verify-changed-files.outputs.files_changed }} files were modified.
@@ -131,12 +106,13 @@ jobs:
 
             ---
             🤖 This PR was created automatically by the dependency update workflow.
-          branch: chore/dependency-updates
+          branch: chore/go-dependency-updates
           delete-branch: true
           labels: |
             dependencies
             automated
             chore
+            go
 
   license-check:
     name: License Compliance

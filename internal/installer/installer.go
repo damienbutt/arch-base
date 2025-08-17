@@ -1,4 +1,4 @@
-package main
+package installer
 
 import (
 	"fmt"
@@ -9,11 +9,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/damienbutt/arch-base/internal/types"
 )
 
 // InstallerEngine handles the actual Arch Linux installation
 type InstallerEngine struct {
-	config *Config
+	config *types.Config
 	logger *Logger
 }
 
@@ -82,7 +84,8 @@ func (l *Logger) Close() {
 	}
 }
 
-func NewInstallerEngine(config *Config) *InstallerEngine {
+// NewInstallerEngine creates a new installer engine with the given configuration
+func NewInstallerEngine(config *types.Config) *InstallerEngine {
 	logger, err := NewLogger("/tmp/arch-base-install/install.log", true)
 	if err != nil {
 		fmt.Printf("Warning: Could not create logger: %v\n", err)

@@ -1,7 +1,6 @@
 root = true
 
 [*]
-
 charset = utf-8
 end_of_line = lf
 insert_final_newline = true
@@ -11,9 +10,10 @@ tab_width = 4
 trim_trailing_whitespace = true
 
 [*.md]
-
 trim_trailing_whitespace = false
 
 [*.{yml,yaml}]
-
 tab_width = 2
+
+[Makefile]
+indent_style = tab

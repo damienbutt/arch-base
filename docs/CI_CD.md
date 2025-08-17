@@ -1,13 +1,13 @@
 # CI/CD Pipeline Documentation
 
 This document describes the comprehensive CI/CD pipeline implemented for the
-Arch-Base project.
+Arch-Base Go project.
 
 ## Overview
 
-The project now includes a robust CI/CD pipeline that handles both the
-Node.js/Yarn components and the new Go TUI application with automated testing,
-linting, building, and releases.
+The project includes a robust CI/CD pipeline for the Go TUI application with
+automated testing, linting, building, security scanning, and releases using
+modern Go tooling.
 
 ## Workflows
 
@@ -17,39 +17,39 @@ linting, building, and releases.
 
 - Push to `master` or `develop` branches
 - Pull requests to `master` or `develop` branches
+- Version tags (`v*`)
 
 **Jobs:**
 
-#### Go TUI CI (`go-ci`)
+#### Test & Lint (`test`)
 
 - **Dependencies**: Downloads and verifies Go modules
 - **Linting**: Runs `go vet`, `staticcheck`, and `golangci-lint`
+- **Security**: Runs `gosec` security scanner and `govulncheck`
 - **Testing**: Executes tests with race detection and coverage reporting
 - **Benchmarking**: Runs performance benchmarks
-- **Building**: Creates binaries for multiple platforms (Linux, macOS,
-  Windows - AMD64/ARM64)
+- **Coverage**: Uploads coverage reports to Codecov
+
+#### Build (`build`)
+
+- **GoReleaser**: Uses GoReleaser for cross-platform builds
+- **Snapshot Builds**: Creates snapshot builds for non-tag pushes
 - **Artifacts**: Uploads build artifacts for downstream jobs
-
-#### Node.js CI (`node-ci`)
-
-- **Dependencies**: Installs Yarn dependencies with cache
-- **Linting**: Runs project linting rules
-- **Testing**: Executes Node.js test suite
-- **Building**: Builds the Node.js project
 
 #### Integration Testing (`integration-test`)
 
-- **Dependencies**: Requires both `go-ci` and `node-ci` to complete
+- **Dependencies**: Requires `build` job to complete
 - **Integration**: Downloads artifacts and runs integration tests
 - **Makefile Testing**: Validates all Makefile targets work correctly
 
 #### Release (`release`)
 
-- **Condition**: Only runs on `master` branch
-- **Dependencies**: Requires all previous jobs to pass
-- **Go Packaging**: Creates release packages for all platforms
+- **Condition**: Only runs on version tags (`v*`)
+- **Dependencies**: Requires `test` and `integration-test` to pass
+- **GoReleaser**: Creates release packages for Linux platforms
 - **GitHub Releases**: Automatically creates GitHub releases with binaries
-- **Semantic Release**: Handles Node.js semantic versioning and releases
+- **Linux Focus**: Builds for Linux AMD64 and ARM64 only (Arch Linux specific)
+- **AUR Package**: Automatically creates AUR package for Arch Linux
 
 ### 2. Security & Dependencies (`.github/workflows/security.yml`)
 
@@ -57,7 +57,7 @@ linting, building, and releases.
 
 - Daily at 2 AM UTC (scheduled)
 - Manual trigger (`workflow_dispatch`)
-- Changes to dependency files
+- Changes to Go dependency files
 
 **Jobs:**
 
@@ -65,12 +65,11 @@ linting, building, and releases.
 
 - **Go Security**: Runs `gosec` security scanner with SARIF output
 - **Vulnerability Check**: Uses `govulncheck` for known vulnerabilities
-- **Node.js Security**: Runs `yarn audit` for npm vulnerabilities
 - **SARIF Upload**: Integrates with GitHub Security tab
 
 #### Dependency Updates (`dependency-update`)
 
-- **Automated Updates**: Updates Go and Node.js dependencies
+- **Automated Updates**: Updates Go dependencies
 - **Pull Request Creation**: Automatically creates PRs for dependency updates
 - **Change Detection**: Only creates PRs when changes are detected
 
@@ -100,7 +99,7 @@ make clean          # Clean build artifacts
 ```bash
 make ci             # Basic CI pipeline locally
 make ci-full        # Full CI with coverage and multi-platform builds
-make pre-commit     # Simulate pre-commit hooks
+make hooks-run      # Run git hooks manually
 make prepare-release # Complete release preparation
 ```
 
@@ -121,19 +120,29 @@ make security       # Security scanning
 make static-analysis # Static code analysis
 ```
 
-### Pre-commit Hooks
-
-Install pre-commit hooks for automatic code quality:
+#### Release & Hooks
 
 ```bash
-# Install pre-commit (if not already installed)
-pip install pre-commit
+make release-check     # Check release readiness with GoReleaser
+make release-snapshot  # Create snapshot release
+make release-dry-run   # Dry run release process
+make hooks-install     # Install Lefthook git hooks
+make hooks-uninstall   # Uninstall git hooks
+```
+
+### Git Hooks (Lefthook)
+
+Install Lefthook for automatic code quality:
+
+```bash
+# Install lefthook (if not already installed)
+go install github.com/evilmartians/lefthook@latest
 
 # Install hooks
-pre-commit install
+make hooks-install
 
-# Run manually on all files
-pre-commit run --all-files
+# Run manually
+make hooks-run
 ```
 
 **Configured Hooks:**
@@ -142,13 +151,32 @@ pre-commit run --all-files
 - Go vetting (`go vet`)
 - Go testing
 - Go module tidying
+- golangci-lint with auto-fix
 - Trailing whitespace removal
-- YAML/JSON validation
-- Markdown linting
-- Shell script linting
-- Security secret detection
+- Merge conflict detection
+- Conventional commit validation
+- Security scanning on push
 
 ## Configuration Files
+
+### `.goreleaser.yaml`
+
+GoReleaser configuration for automated releases:
+
+- Linux-only builds (AMD64 and ARM64) - Arch Linux specific
+- GitHub releases with binaries and changelogs
+- AUR package generation for Arch Linux distribution
+- Checksum generation and verification
+- Focused on Arch Linux ecosystem
+
+### `lefthook.yml`
+
+Lefthook Git hooks configuration:
+
+- Pre-commit: Go formatting, linting, testing, file validation
+- Commit-msg: Conventional commit format validation
+- Pre-push: Comprehensive testing and security scanning
+- Parallel execution for faster hook processing
 
 ### `.golangci.yml`
 
@@ -161,7 +189,7 @@ Comprehensive Go linting configuration with:
 
 ### `.pre-commit-config.yaml`
 
-Pre-commit hooks configuration for:
+Alternative pre-commit hooks configuration for:
 
 - Multi-language support (Go, Shell, Markdown, YAML)
 - Automated formatting and validation
@@ -176,7 +204,7 @@ Markdown linting rules for documentation consistency.
 
 ### ✅ Automated Testing
 
-- Comprehensive test suites for Go and Node.js
+- Comprehensive test suites for Go application
 - Race condition detection
 - Coverage reporting with Codecov integration
 - Performance benchmarking
@@ -185,28 +213,29 @@ Markdown linting rules for documentation consistency.
 
 - Multi-level linting (basic → CI → security)
 - Static analysis with multiple tools
-- Pre-commit hooks for early catch
+- Lefthook hooks for early catch
 - Dependency vulnerability scanning
 
 ### ✅ Multi-Platform Builds
 
-- Cross-compilation for Linux, macOS, Windows
-- ARM64 and AMD64 architecture support
-- Automated binary packaging
-- Release artifact management
+- Cross-compilation for Linux AMD64 and ARM64
+- Arch Linux focused distribution
+- Automated binary packaging with GoReleaser
+- AUR package generation for Arch Linux users
 
 ### ✅ Security
 
-- Daily security scans
-- Vulnerability database checks
+- Daily security scans with gosec
+- Vulnerability database checks with govulncheck
 - Dependency update automation
-- Secret detection
+- Secret detection and SARIF reporting
 
 ### ✅ Release Management
 
-- Semantic versioning
-- Automated GitHub releases
-- Multi-platform distribution packages
+- Semantic versioning with Git tags
+- Automated GitHub releases with GoReleaser
+- Linux-focused distribution packages
+- AUR package for Arch Linux distribution
 - License compliance checking
 
 ## Monitoring & Reports
@@ -229,17 +258,20 @@ Markdown linting rules for documentation consistency.
 
 ### For Developers
 
-1. **Run `make pre-commit`** before committing
+1. **Run `make hooks-run`** before committing
 2. **Use `make ci`** to test locally before pushing
 3. **Keep dependencies updated** with automated PRs
 4. **Review security reports** in GitHub Security tab
+5. **Follow conventional commits** for proper release automation
 
 ### For Maintainers
 
 1. **Monitor automated dependency PRs** for breaking changes
 2. **Review security alerts** and apply patches promptly
-3. **Use semantic commit messages** for proper versioning
-4. **Test releases** before deployment
+3. **Create version tags** for releases: `git tag v1.0.0 && git push origin v1.0.0`
+4. **Monitor GoReleaser releases** and Docker image builds
+5. **Test releases** before promoting to production
 
 This CI/CD pipeline ensures code quality, security, and reliability while
-automating repetitive tasks and enabling fast, confident deployments.
+automating repetitive tasks and enabling fast, confident deployments using
+modern Go tooling.

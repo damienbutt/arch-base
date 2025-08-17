@@ -1,15 +1,17 @@
-package main
+package ui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/damienbutt/arch-base/internal/styles"
 )
 
 type WelcomeModel struct {
-	width         int
-	height        int
-	shouldProceed bool
-	shouldQuit    bool
+	Width         int
+	Height        int
+	ShouldProceed bool
+	ShouldQuit    bool
 }
 
 func NewWelcomeModel() *WelcomeModel {
@@ -25,9 +27,9 @@ func (m *WelcomeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter", " ":
-			m.shouldProceed = true
+			m.ShouldProceed = true
 		case "q", "ctrl+c":
-			m.shouldQuit = true
+			m.ShouldQuit = true
 		}
 	}
 	return m, nil
@@ -35,23 +37,23 @@ func (m *WelcomeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m WelcomeModel) View() string {
 	titleStyle := lipgloss.NewStyle().
-		Foreground(primaryColor).
+		Foreground(styles.PrimaryColor).
 		Bold(true).
 		Align(lipgloss.Center).
 		MarginTop(2).
 		MarginBottom(1)
 
 	subtitleStyle := lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(styles.MutedColor).
 		Align(lipgloss.Center).
 		MarginBottom(2)
 
 	featureStyle := lipgloss.NewStyle().
-		Foreground(successColor).
+		Foreground(styles.SuccessColor).
 		MarginLeft(2)
 
 	instructionStyle := lipgloss.NewStyle().
-		Foreground(warningColor).
+		Foreground(styles.WarningColor).
 		Bold(true).
 		Align(lipgloss.Center).
 		MarginTop(2)
@@ -81,15 +83,15 @@ func (m WelcomeModel) View() string {
 
 	// More responsive container styling
 	maxWidth := 80
-	if m.width > 0 && m.width < maxWidth {
-		maxWidth = m.width - 4
+	if m.Width > 0 && m.Width < maxWidth {
+		maxWidth = m.Width - 4
 	}
 
 	containerStyle := lipgloss.NewStyle().
 		Width(maxWidth).
 		Align(lipgloss.Center, lipgloss.Top).
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(primaryColor).
+		BorderForeground(styles.PrimaryColor).
 		Padding(1, 2).
 		Margin(1, 2)
 

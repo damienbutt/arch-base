@@ -1,4 +1,4 @@
-package main
+package system
 
 import (
 	"regexp"
@@ -7,13 +7,16 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/damienbutt/arch-base/internal/styles"
+	"github.com/damienbutt/arch-base/internal/types"
 )
 
 type SystemModel struct {
-	width         int
-	height        int
-	config        *Config
-	shouldProceed bool
+	Width         int
+	Height        int
+	config        *types.Config
+	ShouldProceed bool
 	focused       int
 	inputs        []textinput.Model
 	timezones     []string
@@ -22,7 +25,7 @@ type SystemModel struct {
 	errors        []string
 }
 
-func NewSystemModel(config *Config) *SystemModel {
+func NewSystemModel(config *types.Config) *SystemModel {
 	inputs := make([]textinput.Model, 4)
 
 	// Hostname input
@@ -118,7 +121,7 @@ func (m *SystemModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.config.Timezone = m.inputs[1].Value()
 					m.config.Locale = m.inputs[2].Value()
 					m.config.Keymap = m.inputs[3].Value()
-					m.shouldProceed = true
+					m.ShouldProceed = true
 				}
 			}
 		case "shift+tab", "up":
@@ -244,7 +247,7 @@ func (m *SystemModel) validateKeymap(keymap string) string {
 
 func (m SystemModel) View() string {
 	titleStyle := lipgloss.NewStyle().
-		Foreground(primaryColor).
+		Foreground(styles.PrimaryColor).
 		Bold(true).
 		MarginBottom(1)
 
@@ -254,12 +257,12 @@ func (m SystemModel) View() string {
 		Width(15)
 
 	helpStyle := lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(styles.MutedColor).
 		Italic(true).
 		MarginLeft(2)
 
 	errorStyle := lipgloss.NewStyle().
-		Foreground(errorColor).
+		Foreground(styles.ErrorColor).
 		MarginLeft(2)
 
 	var formItems []string
@@ -275,9 +278,9 @@ func (m SystemModel) View() string {
 	for i, input := range m.inputs {
 		var style lipgloss.Style
 		if i == m.focused {
-			style = focusedStyle
+			style = styles.FocusedStyle
 		} else {
-			style = blurredStyle
+			style = styles.BlurredStyle
 		}
 
 		formItem := lipgloss.JoinHorizontal(
@@ -294,7 +297,7 @@ func (m SystemModel) View() string {
 			formItems = append(formItems, errorStyle.Render("❌ "+m.errors[0]))
 		} else if i < m.focused || (i == m.focused && len(m.errors) == 0 && input.Value() != "") {
 			formItems = append(formItems, lipgloss.NewStyle().
-				Foreground(successColor).
+				Foreground(styles.SuccessColor).
 				MarginLeft(2).
 				Render("✅ Valid"))
 		}
@@ -314,7 +317,7 @@ func (m SystemModel) View() string {
 
 	if suggestions != "" {
 		formItems = append(formItems, lipgloss.NewStyle().
-			Foreground(warningColor).
+			Foreground(styles.WarningColor).
 			MarginTop(1).
 			Render(suggestions))
 	}
@@ -336,20 +339,20 @@ func (m SystemModel) View() string {
 		lipgloss.JoinVertical(lipgloss.Left, formItems...),
 		"",
 		lipgloss.NewStyle().
-			Foreground(successColor).
+			Foreground(styles.SuccessColor).
 			Render("Use Tab/↑↓ to navigate, Enter to continue"),
 	)
 
 	// More responsive container styling
 	maxWidth := 80
-	if m.width > 0 && m.width < maxWidth {
-		maxWidth = m.width - 4
+	if m.Width > 0 && m.Width < maxWidth {
+		maxWidth = m.Width - 4
 	}
 
 	containerStyle := lipgloss.NewStyle().
 		Width(maxWidth).
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(primaryColor).
+		BorderForeground(styles.PrimaryColor).
 		Padding(1, 2).
 		Margin(1, 2)
 
