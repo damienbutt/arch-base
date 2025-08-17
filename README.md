@@ -70,35 +70,35 @@ make run
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Features](#features)
-- [Installation Guide](#installation-guide)
-- [Build System](#build-system)
-- [Development](#development)
-- [Contributing](#contributing)
-- [Team](#team)
-- [Contributors](#contributors)
-- [Learn More](#learn-more)
-- [License](#license)
+-   [Features](#features)
+-   [Installation Guide](#installation-guide)
+-   [Build System](#build-system)
+-   [Development](#development)
+-   [Contributing](#contributing)
+-   [Team](#team)
+-   [Contributors](#contributors)
+-   [Learn More](#learn-more)
+-   [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## ✨ Features
 
-- **Modern TUI Interface**: Interactive terminal interface built with Bubble Tea
-- **EFI Boot Support**: 260MB EFI system partition for modern UEFI systems
-- **BTRFS Filesystem**: Advanced filesystem with subvolumes for better organization:
-  - `@` (root)
-  - `@home` (user data)
-  - `@log` (system logs)
-  - `@cache` (package cache)
-  - `@snapshots` (system snapshots)
-  - `@swap` (swap files)
-- **Full Disk Encryption**: LUKS1 encryption including boot directory
-- **Automatic Snapshots**: Configured with `snapper` and `snap-pac`
-- **GRUB Bootloader**: Reliable boot management
-- **AUR Support**: Paru AUR helper pre-installed
-- **Optimized Memory**: ZRAM (1GB) + Swapfile (System Memory + 2GB)
-- **Network Boot Ready**: Arch NetBoot support
+-   **Modern TUI Interface**: Interactive terminal interface built with Bubble Tea
+-   **EFI Boot Support**: 260MB EFI system partition for modern UEFI systems
+-   **BTRFS Filesystem**: Advanced filesystem with subvolumes for better organization:
+    -   `@` (root)
+    -   `@home` (user data)
+    -   `@log` (system logs)
+    -   `@cache` (package cache)
+    -   `@snapshots` (system snapshots)
+    -   `@swap` (swap files)
+-   **Full Disk Encryption**: LUKS1 encryption including boot directory
+-   **Automatic Snapshots**: Configured with `snapper` and `snap-pac`
+-   **GRUB Bootloader**: Reliable boot management
+-   **AUR Support**: Paru AUR helper pre-installed
+-   **Optimized Memory**: ZRAM (1GB) + Swapfile (System Memory + 2GB)
+-   **Network Boot Ready**: Arch NetBoot support
 
 ## 📋 Installation Guide
 
@@ -106,33 +106,38 @@ make run
 
 1. Download the [Arch Linux ISO](https://archlinux.org/download/) and boot into the live environment
 2. (Optional) Connect to WiFi if needed:
-   ```bash
-   iwctl
-   # Follow the prompts to connect to your network
-   ```
+
+    ```bash
+    iwctl
+    # Follow the prompts to connect to your network
+    ```
+
 3. Verify internet connectivity:
-   ```bash
-   ping -c 4 archlinux.org
-   ```
+
+    ```bash
+    ping -c 4 archlinux.org
+    ```
 
 ### Installation Steps
 
 1. **Optional SSH Setup** (recommended for copy/paste functionality):
-   ```bash
-   # Set root password
-   passwd root
-   
-   # Find IP address
-   ip a
-   
-   # SSH from another machine
-   ssh root@<ip-address>
-   ```
+
+    ```bash
+    # Set root password
+    passwd root
+
+    # Find IP address
+    ip a
+
+    # SSH from another machine
+    ssh root@<ip-address>
+    ```
 
 2. **Run the installer**:
-   ```bash
-   curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/install-arch-base.sh | bash
-   ```
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/damienbutt/arch-base/HEAD/scripts/install-arch-base.sh | bash
+    ```
 
 3. **Follow the interactive prompts** to configure your system
 
@@ -178,32 +183,36 @@ make uninstall     # Remove from system (requires sudo)
 
 ### Prerequisites
 
-- **Go 1.21+**: [Download and install Go](https://golang.org/dl/)
-- **Git**: For version control
-- **Make**: For build automation
+-   **Go 1.21+**: [Download and install Go](https://golang.org/dl/)
+-   **Git**: For version control
+-   **Make**: For build automation
 
 ### Setting Up
 
 1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/damienbutt/arch-base.git
-   cd arch-base
-   ```
+
+    ```bash
+    git clone https://github.com/damienbutt/arch-base.git
+    cd arch-base
+    ```
 
 2. **Install development tools** (optional):
-   ```bash
-   ./scripts/install-go-tools.sh
-   ```
+
+    ```bash
+    ./scripts/install-go-tools.sh
+    ```
 
 3. **Install git hooks**:
-   ```bash
-   lefthook install
-   ```
+
+    ```bash
+    lefthook install
+    ```
 
 4. **Run initial checks**:
-   ```bash
-   make ci
-   ```
+
+    ```bash
+    make ci
+    ```
 
 ### Project Structure
 
@@ -268,9 +277,9 @@ Contributions of any kind are welcome!
 
 ## 📚 Learn More
 
-- [Arch Linux Wiki](https://wiki.archlinux.org/) - Comprehensive Arch Linux documentation
-- [Bubble Tea](https://github.com/charmbracelet/bubbletea) - The TUI framework used
-- [BTRFS](https://wiki.archlinux.org/title/Btrfs) - Learn about the BTRFS filesystem
+-   [Arch Linux Wiki](https://wiki.archlinux.org/) - Comprehensive Arch Linux documentation
+-   [Bubble Tea](https://github.com/charmbracelet/bubbletea) - The TUI framework used
+-   [BTRFS](https://wiki.archlinux.org/title/Btrfs) - Learn about the BTRFS filesystem
 
 ## 📄 License
 
