@@ -47,18 +47,6 @@ build-dev: build-dir
 	go build -gcflags="all=-N -l" -o $(BUILD_DIR)/$(APP_NAME)-dev ./$(SRC_DIR)
 	@echo "✅ Development build complete: $(BUILD_DIR)/$(APP_NAME)-dev"
 
-# Build for multiple platforms
-.PHONY: build-all
-build-all: build-dir
-	@echo "🔨 Building $(APP_NAME) for multiple platforms..."
-	@\
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BUILD_DIR)/$(APP_NAME)-linux-amd64 ./$(SRC_DIR) && \
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o ../$(BUILD_DIR)/$(APP_NAME)-linux-arm64 . && \
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o ../$(BUILD_DIR)/$(APP_NAME)-darwin-amd64 . && \
-	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o ../$(BUILD_DIR)/$(APP_NAME)-darwin-arm64 . && \
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o ../$(BUILD_DIR)/$(APP_NAME)-windows-amd64.exe .
-	@echo "✅ Multi-platform builds complete in $(BUILD_DIR)/"
-
 # Clean build artifacts
 .PHONY: clean
 clean:
@@ -109,12 +97,19 @@ lint:
 	go vet ./... && \
 	golangci-lint run 2>/dev/null || echo "⚠️  golangci-lint not found, skipping"
 
-# Format Go code
+# Format Go code with goimports
 .PHONY: fmt
 fmt:
-	@echo "📝 Formatting Go code..."
-	@go fmt ./...
+	@echo "📝 Formatting Go code with goimports..."
+	@go run golang.org/x/tools/cmd/goimports@latest -w .
 	@echo "✅ Formatting complete"
+
+# Format Go code (basic)
+.PHONY: fmt-basic
+fmt-basic:
+	@echo "📝 Basic Go formatting..."
+	@go fmt ./...
+	@echo "✅ Basic formatting complete"
 
 # Tidy Go modules
 .PHONY: tidy
@@ -130,6 +125,34 @@ deps:
 	@go mod download
 	@echo "✅ Dependencies downloaded"
 
+# Run vulnerability check
+.PHONY: vuln-check
+vuln-check:
+	@echo "🔍 Checking for vulnerabilities..."
+	@go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+	@echo "✅ Vulnerability check complete"
+
+# Install git hooks with lefthook
+.PHONY: hooks-install
+hooks-install:
+	@echo "🪝 Installing git hooks..."
+	@go run github.com/evilmartians/lefthook@latest install
+	@echo "✅ Git hooks installed"
+
+# Run lefthook checks manually
+.PHONY: hooks-run
+hooks-run:
+	@echo "🪝 Running git hook checks..."
+	@go run github.com/evilmartians/lefthook@latest run pre-commit
+	@echo "✅ Hook checks complete"
+
+# Uninstall git hooks
+.PHONY: hooks-uninstall
+hooks-uninstall:
+	@echo "🪝 Uninstalling git hooks..."
+	@go run github.com/evilmartians/lefthook@latest uninstall
+	@echo "✅ Git hooks uninstalled"
+
 # Create a distributable package
 .PHONY: package
 package: build
@@ -140,23 +163,6 @@ package: build
 	@cp LICENSE $(BUILD_DIR)/dist/
 	@cd $(BUILD_DIR) && tar -czf $(APP_NAME)-$(VERSION)-linux-amd64.tar.gz dist/
 	@echo "✅ Package created: $(BUILD_DIR)/$(APP_NAME)-$(VERSION)-linux-amd64.tar.gz"
-
-# Create release packages for all platforms
-.PHONY: release
-release: build-all
-	@echo "📦 Creating release packages..."
-	@mkdir -p $(BUILD_DIR)/release
-	@for binary in $(BUILD_DIR)/$(APP_NAME)-*; do \
-		if [ -f "$$binary" ]; then \
-			platform=$$(basename "$$binary" | sed 's/$(APP_NAME)-//'); \
-			mkdir -p $(BUILD_DIR)/release/$(APP_NAME)-$(VERSION)-$$platform; \
-			cp "$$binary" $(BUILD_DIR)/release/$(APP_NAME)-$(VERSION)-$$platform/$(APP_NAME)$$(echo $$platform | grep -q windows && echo .exe || echo ""); \
-			cp README.md LICENSE $(BUILD_DIR)/release/$(APP_NAME)-$(VERSION)-$$platform/; \
-			cd $(BUILD_DIR)/release && tar -czf $(APP_NAME)-$(VERSION)-$$platform.tar.gz $(APP_NAME)-$(VERSION)-$$platform/; \
-			rm -rf $(APP_NAME)-$(VERSION)-$$platform/; \
-		fi \
-	done
-	@echo "✅ Release packages created in $(BUILD_DIR)/release/"
 
 # Development workflow: clean, build, and run
 .PHONY: dev
@@ -182,7 +188,7 @@ ci: deps lint test build
 
 # Full CI with coverage
 .PHONY: ci-full
-ci-full: deps lint test-coverage build-all
+ci-full: deps lint test-coverage release-build
 	@echo "✅ Full CI pipeline completed successfully"
 
 # Run tests with coverage
@@ -245,37 +251,33 @@ verify:
 pre-commit: fmt lint test
 	@echo "✅ Pre-commit checks passed"
 
+# Run actual lefthook pre-commit hooks
+.PHONY: pre-commit-hooks
+pre-commit-hooks:
+	@echo "🪝 Running lefthook pre-commit hooks..."
+	@go run github.com/evilmartians/lefthook@latest run pre-commit
+	@echo "✅ Lefthook pre-commit checks passed"
+
 # Release preparation
 .PHONY: prepare-release
-prepare-release: verify lint-ci test-coverage security static-analysis build-all package release-check
+prepare-release: verify lint-ci test-coverage security static-analysis release-check
 	@echo "✅ Release preparation completed"
 
 # GoReleaser targets
 .PHONY: release-check
 release-check:
 	@echo "🔍 Checking release readiness..."
-	@if command -v goreleaser >/dev/null 2>&1; then \
-		goreleaser check; \
-	else \
-		echo "⚠️  goreleaser not installed, run: go install github.com/goreleaser/goreleaser@latest"; \
-	fi
+	@go run github.com/goreleaser/goreleaser@latest check
 
 .PHONY: release-snapshot
 release-snapshot:
 	@echo "📦 Creating snapshot release..."
-	@if command -v goreleaser >/dev/null 2>&1; then \
-		goreleaser release --snapshot --clean; \
-	else \
-		echo "⚠️  goreleaser not installed, run: go install github.com/goreleaser/goreleaser@latest"; \
-	fi
+	@go run github.com/goreleaser/goreleaser@latest release --snapshot --clean
 
 .PHONY: release-build
 release-build:
 	@echo "🔨 Building release with GoReleaser..."
-	@if command -v goreleaser >/dev/null 2>&1; then \
-		goreleaser build --snapshot --clean; \
-	else \
-		echo "⚠️  goreleaser not installed, run: go install github.com/goreleaser/goreleaser@latest"; \
+	@go run github.com/goreleaser/goreleaser@latest build --snapshot --clean \
 	fi
 
 .PHONY: release-dry-run
@@ -325,7 +327,6 @@ help:
 	@echo "📦 Build targets:"
 	@echo "  build        Build the application for production"
 	@echo "  build-dev    Build with debug information"
-	@echo "  build-all    Build for multiple platforms"
 	@echo "  clean        Remove build artifacts"
 	@echo ""
 	@echo "🚀 Run targets:"
@@ -343,9 +344,16 @@ help:
 	@echo "🔍 Code quality targets:"
 	@echo "  lint         Run basic linting and formatting"
 	@echo "  lint-ci      Run comprehensive linting for CI"
-	@echo "  fmt          Format Go code"
+	@echo "  fmt          Format Go code with goimports"
+	@echo "  fmt-basic    Format Go code (basic go fmt)"
 	@echo "  security     Run security scan (gosec)"
 	@echo "  static-analysis Run static analysis (staticcheck)"
+	@echo "  vuln-check   Check for vulnerabilities"
+	@echo ""
+	@echo "🪝 Git hooks targets:"
+	@echo "  hooks-install   Install git hooks with lefthook"
+	@echo "  hooks-run       Run git hook checks manually"
+	@echo "  hooks-uninstall Uninstall git hooks"
 	@echo ""
 	@echo "📦 Dependency targets:"
 	@echo "  deps         Download dependencies"

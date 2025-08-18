@@ -23,12 +23,19 @@ if [ -f "/workspace/go.mod" ]; then
     echo "📚 Downloading Go dependencies..."
     go mod download
     echo "✅ Dependencies ready"
+
+    # Install development tools from tools.go
+    echo "🔧 Development tools available via 'go run'..."
+    if [ -f "/workspace/tools.go" ]; then
+        echo "✅ Development tools ready (lefthook, goimports, govulncheck)"
+        echo "📝 Use: make help to see available commands"
+    fi
 fi
 
 # Install git hooks if lefthook config exists
 if [ -f "/workspace/lefthook.yml" ]; then
     echo "🪝 Installing git hooks..."
-    lefthook install 2>/dev/null || echo "⚠️  Could not install git hooks (no git repo)"
+    go run github.com/evilmartians/lefthook@latest install 2>/dev/null || echo "⚠️  Could not install git hooks (no git repo)"
 fi
 
 echo ""

@@ -33,7 +33,8 @@ RUN pacman -S --noconfirm \
         delve
 
 # Create vscode user with bash (keeping it simple)
-RUN useradd -mG wheel vscode && \
+# Using UID 1000 to match common host user IDs
+RUN useradd -m -u 1000 -G wheel vscode && \
     echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/vscode && \
     chmod 0440 /etc/sudoers.d/vscode
 
@@ -41,17 +42,16 @@ RUN useradd -mG wheel vscode && \
 ENV GOPATH=/go
 ENV PATH=$PATH:/usr/bin:/go/bin
 
-# Create Go workspace
+# Create Go workspace and VS Code directories
 RUN mkdir -p /go/{bin,pkg,src} && \
-    chown -R vscode:vscode /go
+    mkdir -p /home/vscode/.vscode-server && \
+    mkdir -p /home/vscode/.cache && \
+    mkdir -p /home/vscode/.config && \
+    chown -R vscode:vscode /go /home/vscode
 
 # Switch to vscode user
 USER vscode
 WORKDIR /workspace
-
-# Install a few essential Go tools that aren't in Arch repos
-RUN go install golang.org/x/tools/cmd/goimports@latest && \
-    go install golang.org/x/vuln/cmd/govulncheck@latest
 
 # Default command - keep container running for VS Code
 CMD ["sleep", "infinity"]
