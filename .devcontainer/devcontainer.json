@@ -55,7 +55,17 @@
                 "editor.codeActionsOnSave": {
                     "source.organizeImports": "explicit"
                 },
-                "terminal.integrated.defaultProfile.linux": "bash",
+                "terminal.integrated.defaultProfile.linux": "zsh",
+                "terminal.integrated.profiles.linux": {
+                    "zsh": {
+                        "path": "/bin/zsh",
+                        "args": ["-l"]
+                    },
+                    "bash": {
+                        "path": "/bin/bash",
+                        "args": ["-l"]
+                    }
+                },
                 "makefile.configureOnOpen": true,
                 "files.associations": {
                     "Makefile": "makefile",

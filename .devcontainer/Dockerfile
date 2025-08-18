@@ -1,10 +1,11 @@
-# Use official Arch Linux base-devel image
-FROM archlinux:base-devel
+# Use official Arch Linux image and install base-devel
+FROM archlinux:latest
 
-# Initialize and populate the pacman keyring (required for Arch containers)
+# Initialize and populate the pacman keyring, then install base-devel
 RUN pacman-key --init && \
     pacman-key --populate archlinux && \
-    pacman -Syyy
+    pacman -Syyy && \
+    pacman -S --noconfirm base-devel
 
 # Update package database and install essential packages including Go
 RUN pacman -S --noconfirm \
@@ -23,6 +24,15 @@ RUN pacman -S --noconfirm \
         yq \
         yazi \
         wget \
+        fzf \
+        ripgrep \
+        ripgrep-all \
+        atuin \
+        less \
+        eza \
+        zoxide \
+        bat \
+        zsh \
         # Shell scripting tools
         shellcheck \
         # Network tools
@@ -30,15 +40,15 @@ RUN pacman -S --noconfirm \
         # Prompt
         starship
 
-# Create vscode user with bash (keeping it simple)
 # Using UID 1000 to match common host user IDs
-RUN useradd -m -u 1000 -G wheel vscode && \
+RUN useradd -m -u 1000 -s /bin/zsh -G wheel vscode && \
     echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/vscode && \
     chmod 0440 /etc/sudoers.d/vscode
 
 # Set up Go environment
 ENV GOPATH=/go
 ENV PATH=$PATH:/usr/bin:/go/bin
+ENV SHELL=/bin/zsh
 
 # Create Go workspace and VS Code directories
 RUN mkdir -p /go/{bin,pkg,src} && \
@@ -50,11 +60,14 @@ RUN mkdir -p /go/{bin,pkg,src} && \
 
 # Copy custom bashrc, starship config, and GPG config
 COPY .bashrc /home/vscode/.bashrc
+COPY .zshrc /home/vscode/.zshrc
 COPY starship.toml /home/vscode/.config/starship.toml
+COPY atuin.toml /home/vscode/.config/atuin/config.toml
 COPY gpg.conf /home/vscode/.gnupg/gpg.conf
 COPY setup-gpg.sh /home/vscode/setup-gpg.sh
 COPY init-container.sh /home/vscode/init-container.sh
 RUN chown vscode:vscode /home/vscode/.bashrc && \
+    chown vscode:vscode /home/vscode/.zshrc && \
     chown -R vscode:vscode /home/vscode/.config && \
     chown -R vscode:vscode /home/vscode/.gnupg && \
     chown vscode:vscode /home/vscode/setup-gpg.sh && \
@@ -66,6 +79,21 @@ RUN chown vscode:vscode /home/vscode/.bashrc && \
 
 # Switch to vscode user
 USER vscode
+WORKDIR /home/vscode
+
+# Install paru-bin from AUR (as vscode user)
+RUN git clone https://aur.archlinux.org/paru-bin && \
+    cd paru-bin && \
+    makepkg -si --noconfirm && \
+    cd && \
+    rm -rf paru-bin
+
+# Install emojify from AUR using paru
+RUN paru -S --noconfirm \
+        emojify \
+        doggo-bin
+
+# Set working directory back to workspace
 WORKDIR /workspace
 
 # Default command - keep container running for VS Code
