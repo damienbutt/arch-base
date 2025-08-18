@@ -12,6 +12,8 @@ RUN pacman -S --noconfirm \
         go \
         # Editor and utilities
         git \
+        git-lfs \
+        git-delta \
         nano \
         vim \
         neovim \
