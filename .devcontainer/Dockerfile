@@ -24,13 +24,9 @@ RUN pacman -S --noconfirm \
         # Shell scripting tools
         shellcheck \
         # Network tools
-        openssh
-
-# Install Go tools from Arch repos where available
-RUN pacman -S --noconfirm \
-        golangci-lint \
-        goreleaser \
-        delve
+        openssh \
+        # Prompt
+        starship
 
 # Create vscode user with bash (keeping it simple)
 # Using UID 1000 to match common host user IDs
@@ -47,7 +43,21 @@ RUN mkdir -p /go/{bin,pkg,src} && \
     mkdir -p /home/vscode/.vscode-server && \
     mkdir -p /home/vscode/.cache && \
     mkdir -p /home/vscode/.config && \
+    mkdir -p /home/vscode/.gnupg && \
     chown -R vscode:vscode /go /home/vscode
+
+# Copy custom bashrc, starship config, and GPG config
+COPY .bashrc /home/vscode/.bashrc
+COPY starship.toml /home/vscode/.config/starship.toml
+COPY gpg.conf /home/vscode/.gnupg/gpg.conf
+COPY setup-gpg.sh /home/vscode/setup-gpg.sh
+RUN chown vscode:vscode /home/vscode/.bashrc && \
+    chown -R vscode:vscode /home/vscode/.config && \
+    chown -R vscode:vscode /home/vscode/.gnupg && \
+    chown vscode:vscode /home/vscode/setup-gpg.sh && \
+    chmod 700 /home/vscode/.gnupg && \
+    chmod 600 /home/vscode/.gnupg/gpg.conf && \
+    chmod +x /home/vscode/setup-gpg.sh
 
 # Switch to vscode user
 USER vscode

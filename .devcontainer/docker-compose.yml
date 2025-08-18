@@ -17,7 +17,10 @@ services:
       - GO111MODULE=on
       - GOPROXY=https://proxy.golang.org,direct
       - GOSUMDB=sum.golang.org
-      - TZ=UTC
+      - TZ=Europe/London
+      # GPG and SSH environment
+      - GPG_TTY=/dev/console
+      - SSH_AUTH_SOCK=/ssh-agent
 
     # Volume mounts
     volumes:
@@ -25,6 +28,10 @@ services:
       - go-mod-cache:/go/pkg/mod
       - vscode-server:/home/vscode/.vscode-server
       - /var/run/docker.sock:/var/run/docker.sock
+      # GPG agent forwarding (macOS)
+      - ${HOME}/.gnupg:/home/vscode/.gnupg:ro
+      # SSH agent forwarding
+      - ${SSH_AUTH_SOCK:-/dev/null}:/ssh-agent
 
     # Port forwarding
     ports:

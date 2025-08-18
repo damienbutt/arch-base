@@ -6,7 +6,7 @@ echo "=================================="
 echo ""
 # Ensure system is up to date
 echo "🔄 Updating system packages..."
-sudo pacman -Syyu --noconfirm 2>/dev/null || echo "⚠️  Could not update system packages (no sudo access)"
+sudo pacman -Syyu --noconfirm 1>&2>/dev/null || echo "⚠️  Could not update system packages (no sudo access)"
 
 echo "✅ Arch Linux development environment ready!"
 echo ""
@@ -29,7 +29,7 @@ if [ -f "/workspace/go.mod" ]; then
     echo "✅ Dependencies ready"
 
     # Install development tools from tools.go
-    echo "🔧 Development tools available via 'go run'..."
+    echo "🔧 Development tools available via 'go tool'..."
     if [ -f "/workspace/tools.go" ]; then
         echo "✅ Development tools ready (lefthook, goimports, govulncheck)"
         echo "📝 Use: make help to see available commands"

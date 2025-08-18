@@ -69,6 +69,12 @@
 
     "postCreateCommand": "bash .devcontainer/setup.sh",
 
+    "remoteUser": "vscode",
+
+    "overrideCommand": false,
+
+    "shutdownAction": "stopContainer",
+
     "forwardPorts": [8080, 9000],
 
     "portsAttributes": {
