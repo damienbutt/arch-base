@@ -69,6 +69,8 @@
 
     "postCreateCommand": "bash .devcontainer/setup.sh",
 
+    "postStartCommand": "bash -c 'if [ \"$AUTO_SETUP_GPG\" = \"true\" ]; then echo \"🔧 Running post-start GPG setup...\"; /home/vscode/setup-gpg.sh --quiet --auto 2>/dev/null || true; fi'",
+
     "remoteUser": "vscode",
 
     "overrideCommand": false,

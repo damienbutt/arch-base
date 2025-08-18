@@ -53,13 +53,16 @@ COPY .bashrc /home/vscode/.bashrc
 COPY starship.toml /home/vscode/.config/starship.toml
 COPY gpg.conf /home/vscode/.gnupg/gpg.conf
 COPY setup-gpg.sh /home/vscode/setup-gpg.sh
+COPY init-container.sh /home/vscode/init-container.sh
 RUN chown vscode:vscode /home/vscode/.bashrc && \
     chown -R vscode:vscode /home/vscode/.config && \
     chown -R vscode:vscode /home/vscode/.gnupg && \
     chown vscode:vscode /home/vscode/setup-gpg.sh && \
+    chown vscode:vscode /home/vscode/init-container.sh && \
     chmod 700 /home/vscode/.gnupg && \
     chmod 600 /home/vscode/.gnupg/gpg.conf && \
-    chmod +x /home/vscode/setup-gpg.sh
+    chmod +x /home/vscode/setup-gpg.sh && \
+    chmod +x /home/vscode/init-container.sh
 
 # Switch to vscode user
 USER vscode

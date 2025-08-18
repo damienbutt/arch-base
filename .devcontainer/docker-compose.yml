@@ -1,5 +1,7 @@
 services:
   devcontainer:
+    env_file:
+      - .env
     build:
       context: .
       dockerfile: Dockerfile
@@ -22,6 +24,14 @@ services:
       # GPG and SSH environment
       - GPG_TTY=/dev/console
       - SSH_AUTH_SOCK=/ssh-agent
+      # Auto-configure GPG on container start
+      - AUTO_SETUP_GPG=true
+      # GPG Key Configuration (optional - set in .env file)
+      - GPG_KEY_ID=${GPG_KEY_ID:-}
+      - GPG_KEY_FILE=${GPG_KEY_FILE:-}
+      - GIT_USER_NAME=${GIT_USER_NAME:-}
+      - GIT_USER_EMAIL=${GIT_USER_EMAIL:-}
+      - AUTO_SETUP_GPG=true
 
     # Volume mounts
     volumes:

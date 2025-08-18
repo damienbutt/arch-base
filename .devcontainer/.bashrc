@@ -124,8 +124,16 @@ if command -v gpg > /dev/null 2>&1; then
     # Check if we have any GPG keys
     if gpg --list-secret-keys &>/dev/null; then
         echo "🗝️  GPG keys: found (ready for commit signing)"
+        # Auto-configure GPG if enabled and not already done
+        if [ "$AUTO_SETUP_GPG" = "true" ] && [ -z "$(git config --global user.signingkey 2>/dev/null)" ]; then
+            echo "🔧 Auto-configuring GPG for git..."
+            /home/vscode/setup-gpg.sh --quiet --auto 2>/dev/null || true
+        fi
     else
         echo "🗝️  GPG keys: none found (import your keys to sign commits)"
+        if [ "$AUTO_SETUP_GPG" = "true" ]; then
+            echo "💡 Tip: Mount your ~/.gnupg directory to auto-configure GPG"
+        fi
     fi
 else
     echo "🔐 GPG: not available"

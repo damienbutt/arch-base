@@ -168,6 +168,43 @@ package: build
 .PHONY: dev
 dev: clean build run
 
+# GPG Development Setup
+.PHONY: gpg-setup
+gpg-setup:
+	@echo "🔐 Setting up GPG for development container..."
+	@if [ ! -f .devcontainer/.env ]; then \
+		echo "📝 Creating .env file from template..."; \
+		cp .devcontainer/.env.template .devcontainer/.env; \
+		echo "✏️  Please edit .devcontainer/.env with your GPG configuration"; \
+		echo "📖 See .devcontainer/GPG_SETUP_GUIDE.md for detailed instructions"; \
+	else \
+		echo "✅ .env file already exists"; \
+	fi
+
+.PHONY: gpg-export
+gpg-export:
+	@echo "🔑 Exporting GPG private key for container import..."
+	@echo "💡 This will help you set up GPG_KEY_FILE in .env"
+	@echo ""
+	@echo "Available GPG keys:"
+	@gpg --list-secret-keys --keyid-format LONG
+	@echo ""
+	@read -p "Enter the Key ID to export: " KEY_ID; \
+	if [ -n "$$KEY_ID" ]; then \
+		echo "📤 Exporting key $$KEY_ID to .devcontainer/private-key.asc..."; \
+		gpg --export-secret-keys "$$KEY_ID" > .devcontainer/private-key.asc; \
+		chmod 600 .devcontainer/private-key.asc; \
+		echo "✅ Key exported. Add 'GPG_KEY_FILE=./private-key.asc' to .devcontainer/.env"; \
+	else \
+		echo "❌ No key ID provided"; \
+	fi
+
+.PHONY: gpg-test
+gpg-test:
+	@echo "🧪 Testing GPG setup in development container..."
+	@docker-compose -f .devcontainer/docker-compose.yml exec devcontainer /home/vscode/setup-gpg.sh || \
+		echo "⚠️  Container not running. Start with: docker-compose -f .devcontainer/docker-compose.yml up -d"
+
 # Show build information
 .PHONY: info
 info:
@@ -307,7 +344,12 @@ help:
 	@echo "  test-race    Run tests with race detection"
 	@echo "  bench        Run benchmarks"
 	@echo ""
-	@echo "🔍 Code quality targets:"
+	@echo "� GPG Development Setup:"
+	@echo "  gpg-setup    Create .env file from template"
+	@echo "  gpg-export   Export GPG key for container import"
+	@echo "  gpg-test     Test GPG setup in development container"
+	@echo ""
+	@echo "�🔍 Code quality targets:"
 	@echo "  lint         Run basic linting and formatting"
 	@echo "  lint-ci      Run comprehensive linting for CI"
 	@echo "  fmt          Format Go code with goimports"

@@ -40,3 +40,9 @@ go.work.sum
 # Build Artifacts
 build/
 dist/
+
+# Development Container Configuration
+.devcontainer/.env
+.devcontainer/private-key.asc
+.devcontainer/*.key
+.devcontainer/*.pem
