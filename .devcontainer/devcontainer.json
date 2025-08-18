@@ -1,11 +1,8 @@
 {
     "name": "Arch Linux",
-    "dockerFile": "Dockerfile",
-    "context": "..",
-
-    "runArgs": ["--privileged", "--hostname=arch-dev"],
-
-    "mounts": ["source=arch-base-go-mod-cache,target=/go/pkg/mod,type=volume"],
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "devcontainer",
+    "workspaceFolder": "/workspace",
 
     "remoteEnv": {
         "GOOS": "linux",
@@ -83,8 +80,5 @@
             "label": "Debug Port",
             "protocol": "http"
         }
-    },
-
-    "workspaceFolder": "/workspace",
-    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+    }
 }
