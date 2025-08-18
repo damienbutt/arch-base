@@ -7,10 +7,11 @@ RUN pacman-key --init && \
     pacman -Syyy
 
 # Update package database and install essential packages including Go
-RUN pacman -S --noconfirm --needed \
+RUN pacman -S --noconfirm \
         # Go and development tools
         go \
         # Editor and utilities
+        git \
         nano \
         vim \
         neovim \
@@ -19,6 +20,7 @@ RUN pacman -S --noconfirm --needed \
         jq \
         yq \
         yazi \
+        wget \
         # Shell scripting tools
         shellcheck \
         # Network tools

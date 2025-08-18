@@ -1,9 +1,9 @@
 {
-    "name": "Arch Linux Installer Development",
+    "name": "Arch Linux",
     "dockerFile": "Dockerfile",
     "context": "..",
 
-    "runArgs": ["--privileged"],
+    "runArgs": ["--privileged", "--hostname=arch-dev"],
 
     "mounts": ["source=arch-base-go-mod-cache,target=/go/pkg/mod,type=volume"],
 
@@ -17,7 +17,8 @@
     },
 
     "containerEnv": {
-        "TZ": "UTC"
+        "TZ": "Europe/London",
+        "LANG": "en_GB.UTF-8"
     },
 
     "customizations": {
