@@ -9,7 +9,6 @@ pre-commit:
     go-fmt:
       glob: "*.go"
       run: |
-        cd tui-prototype
         go fmt ./...
         git add .
 
@@ -18,7 +17,6 @@ pre-commit:
       files: git diff --name-only --cached
       glob: "{go.mod,go.sum}"
       run: |
-        cd tui-prototype
         go mod tidy
         git add go.mod go.sum
 
@@ -26,14 +24,12 @@ pre-commit:
     go-vet:
       glob: "*.go"
       run: |
-        cd tui-prototype
         go vet ./...
 
     # Go linting
     golangci-lint:
       glob: "*.go"
       run: |
-        cd tui-prototype
         golangci-lint run --fix
         git add .
 
@@ -41,7 +37,6 @@ pre-commit:
     go-test:
       glob: "*.go"
       run: |
-        cd tui-prototype
         go test ./...
 
     # Trailing whitespace and other file checks
@@ -70,13 +65,11 @@ pre-push:
     # Run comprehensive tests before push
     go-test-race:
       run: |
-        cd tui-prototype
         go test -race ./...
 
     # Security scan
     gosec:
       run: |
-        cd tui-prototype
         if command -v gosec >/dev/null 2>&1; then
           gosec ./...
         else
@@ -86,7 +79,6 @@ pre-push:
     # Vulnerability check
     govulncheck:
       run: |
-        cd tui-prototype
         if command -v govulncheck >/dev/null 2>&1; then
           govulncheck ./...
         else
