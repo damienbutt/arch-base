@@ -4,9 +4,13 @@ set -e
 echo "🏗️  Arch-Base Development Container"
 echo "=================================="
 echo ""
+# Ensure system is up to date
+echo "🔄 Updating system packages..."
+sudo pacman -Syyu --noconfirm 2>/dev/null || echo "⚠️  Could not update system packages (no sudo access)"
+
 echo "✅ Arch Linux development environment ready!"
 echo ""
-echo "� Go $(go version | cut -d' ' -f3) installed"
+echo "📦 Go $(go version | cut -d' ' -f3) installed"
 echo "🔧 Development tools available:"
 echo "   • golangci-lint - Go linting"
 echo "   • delve - Go debugger"
@@ -35,7 +39,7 @@ fi
 # Install git hooks if lefthook config exists
 if [ -f "/workspace/lefthook.yml" ]; then
     echo "🪝 Installing git hooks..."
-    go run github.com/evilmartians/lefthook@latest install 2>/dev/null || echo "⚠️  Could not install git hooks (no git repo)"
+    go tool lefthook install 2>/dev/null || echo "⚠️  Could not install git hooks (no git repo)"
 fi
 
 echo ""
