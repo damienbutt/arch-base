@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      pull: true
     container_name: arch-base-dev
     hostname: arch-dev
 
