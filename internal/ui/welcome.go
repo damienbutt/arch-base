@@ -76,7 +76,7 @@ func (m WelcomeModel) View() string {
 		featureStyle.Render("• User account with group selection and validation"),
 		featureStyle.Render("• Disk partitioning with filesystem and encryption options"),
 		featureStyle.Render("• Package selection with preset installation modes"),
-		featureStyle.Render("• Installation behaviour and final configuration"),
+		featureStyle.Render("• Installation behavior and final configuration"),
 		"",
 		instructionStyle.Render("Press Enter to begin configuration • Press q to quit"),
 	)

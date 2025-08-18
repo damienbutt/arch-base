@@ -45,13 +45,13 @@ jobs:
         run: go vet ./...
 
       - name: Run staticcheck
-        run: go run honnef.co/go/tools/cmd/staticcheck@latest ./...
+        run: go tool staticcheck ./...
 
       - name: Run golangci-lint
-        run: go run github.com/golangci/golangci-lint/cmd/golangci-lint@latest run --verbose
+        run: go tool golangci-lint run --verbose
 
       - name: Run vulnerability check
-        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+        run: go tool govulncheck ./...
 
       # TODO: Re-enable gosec when correct repository location is found
 

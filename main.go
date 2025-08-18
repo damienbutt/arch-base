@@ -317,7 +317,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.install = install
 		}
 		return m, cmd
-
 	}
 
 	return m, cmd
@@ -504,7 +503,7 @@ DESKTOP_ENV="%s"
 AUDIO_SYSTEM="%s"
 ESSENTIAL_PACKAGES="%s"
 
-# Installation Behaviour
+# Installation Behavior
 AUTO_REBOOT="%t"
 SKIP_NON_FREE="%t"
 DRY_RUN="%t"

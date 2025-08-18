@@ -30,7 +30,7 @@ pre-commit:
     golangci-lint:
       glob: "*.go"
       run: |
-        golangci-lint run --fix
+        go tool golangci-lint run --fix
         git add .
 
     # Run tests

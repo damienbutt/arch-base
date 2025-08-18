@@ -30,10 +30,10 @@ jobs:
         run: go mod download
 
       - name: Run vulnerability check
-        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+        run: go tool govulncheck ./...
 
-      # TODO: Re-enable gosec when correct repository location is found
-      # The securecodewarrior/gosec repository appears to have moved
+      - name: Run security scan
+        run: go tool gosec ./...
 
   dependency-update:
     name: Dependency Update Check

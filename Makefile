@@ -101,7 +101,7 @@ lint:
 .PHONY: fmt
 fmt:
 	@echo "📝 Formatting Go code with goimports..."
-	@go run golang.org/x/tools/cmd/goimports@latest -w .
+	@go tool goimports -w .
 	@echo "✅ Formatting complete"
 
 # Format Go code (basic)
@@ -129,28 +129,28 @@ deps:
 .PHONY: vuln-check
 vuln-check:
 	@echo "🔍 Checking for vulnerabilities..."
-	@go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+	@go tool govulncheck ./...
 	@echo "✅ Vulnerability check complete"
 
 # Install git hooks with lefthook
 .PHONY: hooks-install
 hooks-install:
 	@echo "🪝 Installing git hooks..."
-	@go run github.com/evilmartians/lefthook@latest install
+	@go tool lefthook install
 	@echo "✅ Git hooks installed"
 
 # Run lefthook checks manually
 .PHONY: hooks-run
 hooks-run:
 	@echo "🪝 Running git hook checks..."
-	@go run github.com/evilmartians/lefthook@latest run pre-commit
+	@go tool lefthook run pre-commit
 	@echo "✅ Hook checks complete"
 
 # Uninstall git hooks
 .PHONY: hooks-uninstall
 hooks-uninstall:
 	@echo "🪝 Uninstalling git hooks..."
-	@go run github.com/evilmartians/lefthook@latest uninstall
+	@go tool lefthook uninstall
 	@echo "✅ Git hooks uninstalled"
 
 # Create a distributable package
@@ -217,16 +217,14 @@ bench:
 .PHONY: security
 security:
 	@echo "🔒 Running security scan..."
-	@\
-	(command -v gosec >/dev/null && gosec ./... || echo "⚠️  gosec not found, install with: go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest")
+	@go tool gosec ./...
 
 # Static analysis
 .PHONY: static-analysis
 static-analysis:
 	@echo "🔍 Running static analysis..."
-	@\
-	go vet ./... && \
-	(command -v staticcheck >/dev/null && staticcheck ./... || echo "⚠️  staticcheck not found, install with: go install honnef.co/go/tools/cmd/staticcheck@latest")
+	@go vet ./...
+	@go tool staticcheck ./...
 
 # Comprehensive linting
 .PHONY: lint-ci
@@ -255,7 +253,7 @@ pre-commit: fmt lint test
 .PHONY: pre-commit-hooks
 pre-commit-hooks:
 	@echo "🪝 Running lefthook pre-commit hooks..."
-	@go run github.com/evilmartians/lefthook@latest run pre-commit
+	@go tool lefthook run pre-commit
 	@echo "✅ Lefthook pre-commit checks passed"
 
 # Release preparation
@@ -267,55 +265,23 @@ prepare-release: verify lint-ci test-coverage security static-analysis release-c
 .PHONY: release-check
 release-check:
 	@echo "🔍 Checking release readiness..."
-	@go run github.com/goreleaser/goreleaser@latest check
+	@go tool goreleaser check
 
 .PHONY: release-snapshot
 release-snapshot:
 	@echo "📦 Creating snapshot release..."
-	@go run github.com/goreleaser/goreleaser@latest release --snapshot --clean
+	@go tool goreleaser release --snapshot --clean
 
 .PHONY: release-build
 release-build:
 	@echo "🔨 Building release with GoReleaser..."
-	@go run github.com/goreleaser/goreleaser@latest build --snapshot --clean \
+	@go tool goreleaser build --snapshot --clean \
 	fi
 
 .PHONY: release-dry-run
 release-dry-run:
 	@echo "🧪 Dry run release..."
-	@if command -v goreleaser >/dev/null 2>&1; then \
-		goreleaser release --skip=publish --clean; \
-	else \
-		echo "⚠️  goreleaser not installed, run: go install github.com/goreleaser/goreleaser@latest"; \
-	fi
-
-# Lefthook (Git hooks) targets
-.PHONY: hooks-install
-hooks-install:
-	@echo "🪝 Installing git hooks with lefthook..."
-	@if command -v lefthook >/dev/null 2>&1; then \
-		lefthook install; \
-	else \
-		echo "⚠️  lefthook not installed, run: go install github.com/evilmartians/lefthook@latest"; \
-	fi
-
-.PHONY: hooks-run
-hooks-run:
-	@echo "🏃 Running git hooks..."
-	@if command -v lefthook >/dev/null 2>&1; then \
-		lefthook run pre-commit; \
-	else \
-		echo "⚠️  lefthook not installed, run: go install github.com/evilmartians/lefthook@latest"; \
-	fi
-
-.PHONY: hooks-uninstall
-hooks-uninstall:
-	@echo "🗑️  Uninstalling git hooks..."
-	@if command -v lefthook >/dev/null 2>&1; then \
-		lefthook uninstall; \
-	else \
-		echo "⚠️  lefthook not installed"; \
-	fi
+	@go tool goreleaser release --skip=publish --clean
 
 # Show help
 .PHONY: help
